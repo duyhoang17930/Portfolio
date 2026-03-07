@@ -49,4 +49,15 @@ const GuestbookMessage = sequelize.define('GuestbookMessage', {
 User.hasMany(GuestbookMessage, { foreignKey: 'userId', as: 'messages' });
 GuestbookMessage.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
+// Types for authenticated users
+export interface AuthUser {
+  id: number;
+  provider: string;
+  providerId: string;
+  name: string;
+  email: string | null;
+  avatarUrl: string | null;
+  isAdmin: boolean;
+}
+
 export { sequelize, User, Project, GuestbookMessage };

@@ -1,8 +1,10 @@
-import { Router } from 'express';
-import { Project } from '../models/index.js';
+import { Router, Request } from 'express';
+import { Project, AuthUser } from '../models/index.js';
 import { requireAdmin } from '../middleware/admin.js';
 
 const router = Router();
+
+type AuthRequest = Request & { user?: AuthUser };
 
 // Get all projects (public)
 router.get('/', async (req, res) => {

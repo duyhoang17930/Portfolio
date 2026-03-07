@@ -1,4 +1,4 @@
-import { GuestbookMessage } from '../../types';
+import type { GuestbookMessage } from '../../types';
 
 interface Props {
   messages: GuestbookMessage[];

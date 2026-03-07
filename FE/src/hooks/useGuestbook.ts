@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { GuestbookMessage } from '../types';
+import type { GuestbookMessage } from '../types';
 
 export function useGuestbook() {
   const [messages, setMessages] = useState<GuestbookMessage[]>([]);

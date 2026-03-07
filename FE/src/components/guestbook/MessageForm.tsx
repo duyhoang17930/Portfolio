@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User } from '../../types';
+import type { User } from '../../types';
 
 interface Props {
   onSubmit: (message: string) => Promise<void>;

@@ -1,11 +1,20 @@
 export function Home() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-6xl font-bold mb-4 text-foreground">Your Name</h1>
-        <p className="text-2xl text-muted-foreground mb-8">Full Stack Developer</p>
-        <p className="text-lg text-muted-foreground max-w-xl">
-          Welcome to my portfolio. I build modern web applications with React, Node.js, and more.
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center z-10">
+        {/* Main Name - Bold Sans-Serif */}
+        <h1 className="text-7xl md:text-8xl lg:text-9xl font-bold tracking-tight text-foreground mb-4 animate-fade-in">
+          Duy Hoàng
+        </h1>
+
+        {/* Subtitle */}
+        <p className="text-lg md:text-xl lg:text-2xl font-light tracking-[0.3em] text-muted-foreground uppercase animate-fade-in-up">
+          Web Developer | Mobile Developer
+        </p>
+
+        {/* Tagline */}
+        <p className="mt-8 text-base md:text-lg text-muted-foreground/70 max-w-lg mx-auto animate-fade-in-up-delayed">
+          Building modern, performant applications with clean code and thoughtful design.
         </p>
       </div>
     </div>

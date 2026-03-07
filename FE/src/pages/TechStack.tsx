@@ -1,14 +1,30 @@
 const skills = [
-  { category: 'Frontend', items: ['React', 'TypeScript', 'Tailwind CSS', 'Next.js', 'Vue.js'] },
-  { category: 'Backend', items: ['Node.js', 'Express', 'PostgreSQL', 'MySQL', 'Prisma'] },
-  { category: 'Tools', items: ['Git', 'Docker', 'AWS', 'Figma', 'Linux'] },
-  { category: 'Other', items: ['REST APIs', 'GraphQL', 'Authentication', 'CI/CD'] },
+  {
+    category: 'Languages',
+    items: ['Python', 'JavaScript', 'TypeScript', 'Java', 'C', 'C++', 'Dart']
+  },
+  {
+    category: 'Frontend',
+    items: ['HTML', 'CSS', 'React', 'Next.js', 'Tailwind CSS']
+  },
+  {
+    category: 'Mobile Development',
+    items: ['Flutter', "Android (Java)"]
+  },
+  {
+    category: 'Backend',
+    items: ['Spring Boot', 'MySQL']
+  },
+  {
+    category: 'Tools & Platforms',
+    items: ['Git', 'GitHub']
+  }
 ];
 
 export function TechStack() {
   return (
-    <div className="max-w-4xl mx-auto py-12 px-4">
-      <h1 className="text-4xl font-bold mb-8 text-foreground">Tech Stack</h1>
+    <div className="max-w-4xl mx-auto py-12 px-4 ">
+      <h1 className="text-4xl font-bold mb-8 text-foreground ">Tech Stack</h1>
       <div className="grid gap-6 md:grid-cols-2">
         {skills.map((group) => (
           <div key={group.category} className="border border-border rounded-lg p-4 bg-card">

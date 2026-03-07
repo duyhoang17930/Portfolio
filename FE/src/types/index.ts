@@ -5,6 +5,7 @@ export interface User {
   email?: string;
   avatarUrl?: string;
   createdAt: string;
+  isAdmin?: boolean;
 }
 
 export interface GuestbookMessage {

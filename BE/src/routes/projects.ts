@@ -1,5 +1,7 @@
-import { Router, Request } from 'express';
-import { Project, AuthUser } from '../models/index.js';
+import { Router } from 'express';
+import type { Request } from 'express';
+import { Project } from '../models/index.js';
+import type { AuthUser } from '../models/index.js';
 import { requireAdmin } from '../middleware/admin.js';
 
 const router = Router();

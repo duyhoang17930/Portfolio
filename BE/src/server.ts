@@ -20,17 +20,17 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FE_URL || 'http://localhost:5173',
-  credentials: true
+    origin: process.env.FE_URL || 'http://localhost:5173',
+    credentials: true
 }));
 app.use(express.json());
 
 // Session
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+    secret: process.env.SESSION_SECRET || 'secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 
 // Passport
@@ -44,14 +44,14 @@ app.use('/api/projects', projectsRoutes);
 
 // Health check
 app.get('/', (req, res) => {
-  res.json({ message: 'Backend running' });
+    res.json({ message: 'Backend running' });
 });
 
 // Sync database and start server
 sequelize.sync().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
 }).catch((err) => {
-  console.error('Failed to sync database:', err);
+    console.error('Failed to sync database:', err);
 });

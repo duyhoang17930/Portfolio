@@ -61,3 +61,4 @@ export interface AuthUser {
 }
 
 export { sequelize, User, Project, GuestbookMessage };
+export type { AuthUser };

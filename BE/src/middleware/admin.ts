@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { AuthUser } from '../models/index.js';
+import type { AuthUser } from '../models/index.js';
 
 type AuthRequest = Request & { user?: AuthUser };
 

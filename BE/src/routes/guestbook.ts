@@ -1,5 +1,7 @@
-import { Router, Request } from 'express';
-import { GuestbookMessage, User, AuthUser } from '../models/index.js';
+import { Router } from 'express';
+import type { Request } from 'express';
+import { GuestbookMessage, User } from '../models/index.js';
+import type { AuthUser } from '../models/index.js';
 
 const router = Router();
 

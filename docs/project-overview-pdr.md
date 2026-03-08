@@ -19,14 +19,16 @@ A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects,
 ### Frontend
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| React | 19.x | UI framework |
+| React | 19.2.0 | UI framework |
 | TypeScript | 5.9.3 | Type safety |
-| Vite | 7.x | Build tool |
-| Tailwind CSS | 4.x | Styling |
-| React Router | 7.x | Client-side routing |
-| Axios | Latest | HTTP client |
-| @react-spring/web | Latest | Animation library |
-| clsx + tailwind-merge | Latest | Class name utility |
+| Vite | 7.3.1 | Build tool |
+| Tailwind CSS | 4.2.1 | Styling |
+| React Router | 7.13.1 | Client-side routing |
+| Axios | 1.13.6 | HTTP client |
+| @react-spring/web | 10.0.3 | Animation library |
+| clsx + tailwind-merge | 2.1.1 / 3.5.0 | Class name utility |
+| lucide-react | 0.577.0 | Icons |
+| react-icons | 5.6.0 | Icons |
 
 ### Backend
 | Technology | Version | Purpose |
@@ -37,8 +39,11 @@ A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects,
 | MongoDB | Latest | Database |
 | Mongoose | 9.2.4 | ODM |
 | Passport.js | 0.7.0 | OAuth authentication |
-| express-session | Latest | Session management |
+| express-session | 1.19.0 | Session management |
 | Nodemailer | 8.0.1 | Email sending |
+| connect-mongo | 6.0.0 | MongoDB session store |
+| connect-redis | 9.0.0 | Redis session store |
+| redis | 5.11.0 | Redis client |
 
 ---
 
@@ -58,6 +63,7 @@ A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects,
 
 - **OAuth Providers:** Google and GitHub
 - **Session Management:** express-session with secure cookies in production
+- **Session Store:** MongoDB (connect-mongo) or Redis (connect-redis) for production
 - **User Data Stored:** Provider, providerId, name, email, avatarUrl, isAdmin flag
 
 ### 3.3 Admin Dashboard
@@ -235,12 +241,17 @@ A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects,
 - Secure session cookies (httpOnly, secure flag)
 - CORS configured for frontend origin only
 - Input validation on all API endpoints
+- Environment variables for all secrets
 
 ### N3: Maintainability
 - TypeScript for type safety
 - ESLint + Prettier for code consistency
 - Modular component structure
 - Environment-based configuration
+
+### N4: Scalability
+- Session store supports MongoDB and Redis
+- Docker support for containerization
 
 ---
 
@@ -261,6 +272,8 @@ A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects,
 - [x] Create Projects API (CRUD for admin)
 - [x] Create TechStack API (CRUD for admin)
 - [x] Create Contact API (email sending)
+- [x] Add Redis session store support
+- [x] Add Docker configuration
 
 ### Phase 3: Frontend Development
 - [x] Setup React Router with tab navigation
@@ -273,10 +286,11 @@ A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects,
 - [x] Implement Admin dashboard for project management
 - [x] Implement Admin dashboard for techstack management
 - [x] Add ThemeContext for dark/light mode
+- [x] Add CursorFollowerContext for custom cursor
 - [x] Add visual effects (cursor, film grain, chromatic)
 
 ### Phase 4: Deployment
-- [ ] Dockerize backend
+- [x] Dockerize backend
 - [ ] Configure Nginx with SSL
 - [ ] Deploy to Vercel (FE) and VPS (BE)
 
@@ -286,7 +300,7 @@ A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects,
 
 ### AC1: Application Launch
 - [x] Frontend starts on port 5173
-- [x] Backend starts on port 5000
+- [x] Backend starts on port 3000
 - [x] Database connection established
 
 ### AC2: Authentication
@@ -335,7 +349,7 @@ A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects,
 
 ### Backend (.env)
 ```env
-PORT=5000
+PORT=3000
 NODE_ENV=development
 FE_URL=http://localhost:5173
 
@@ -348,23 +362,22 @@ SESSION_SECRET=your_session_secret_min_32_chars
 # Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:5000/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
 # GitHub OAuth
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
-GITHUB_CALLBACK_URL=http://localhost:5000/auth/github/callback
+GITHUB_CALLBACK_URL=http://localhost:3000/auth/github/callback
 
 # Email (Nodemailer)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your_app_password
+GMAIL_USER=your-email@gmail.com
+GMAIL_APP_PASSWORD=your_app_password
+CONTACT_TO_EMAIL=your-email@gmail.com
 ```
 
 ### Frontend (.env)
 ```env
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=http://localhost:3000
 ```
 
 ---
@@ -378,7 +391,8 @@ VITE_API_URL=http://localhost:5000
 - [x] Contact form with email sending
 - [x] Dark/light theme toggle
 - [x] Visual effects (cursor, film grain, chromatic)
-- [ ] Basic deployment
+- [x] Docker support for backend
+- [ ] Production deployment
 
 ### Future Enhancements
 - Blog functionality
@@ -390,6 +404,6 @@ VITE_API_URL=http://localhost:5000
 
 ---
 
-*Document Version: 1.1*
+*Document Version: 1.2*
 *Last Updated: 2026-03-08*
 *Status: Active*

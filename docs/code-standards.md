@@ -60,13 +60,12 @@ FE/src/
 │   ├── Contact.tsx
 │   ├── Guestbook.tsx
 │   └── Admin.tsx
-├── context/
+├── contexts/
 │   ├── ThemeContext.tsx    # Dark/light theme
-│   └── AuthContext.tsx     # Authentication state
+│   └── CursorFollowerContext.tsx # Custom cursor
 ├── hooks/
 │   ├── useAuth.ts
-│   ├── useGuestbook.ts
-│   └── useProjects.ts
+│   └── useGuestbook.ts
 ├── lib/
 │   ├── api.ts              # Axios instance
 │   └── utils.ts            # cn() utility
@@ -154,7 +153,7 @@ export function useUser(userId: string) {
 ### 2.4 State Management
 - Use `useState` for component-local state
 - Use custom hooks for shared state logic
-- Use React Context for global state (ThemeContext, AuthContext)
+- Use React Context for global state (ThemeContext, CursorFollowerContext)
 - No external state management (Redux/Zustand)
 
 ### 2.5 Styling (Tailwind CSS 4)
@@ -202,7 +201,7 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
   withCredentials: true,
 });
 
@@ -280,7 +279,9 @@ BE/src/
 │   ├── google.ts          # Google OAuth strategy
 │   └── github.ts          # GitHub OAuth strategy
 └── scripts/
-    └── seed-*.ts          # Database seeding scripts
+    ├── seed-admin.ts      # Database seeding scripts
+    ├── seed-projects.ts
+    └── seed-techstack.ts
 ```
 
 ### 3.2 Express Routes
@@ -535,5 +536,35 @@ router.post('/', async (req, res) => {
 
 ---
 
-*Document Version: 1.1*
+## 10. Docker Best Practices
+
+### Dockerfile Guidelines
+- Use multi-stage builds for smaller images
+- Use non-root user for security
+- Expose only necessary ports
+- Use environment variables for configuration
+
+```dockerfile
+# Example multi-stage build
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY package*.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile --prod=false
+COPY . .
+RUN pnpm run build
+
+FROM node:20-alpine
+WORKDIR /app
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
+USER nodejs
+EXPOSE 3000
+CMD ["pnpm", "run", "start"]
+```
+
+---
+
+*Document Version: 1.2*
 *Last Updated: 2026-03-08*

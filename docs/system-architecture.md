@@ -24,12 +24,12 @@ This document provides a comprehensive overview of the portfolio project's syste
                     +----------------------+----------------------+
                     |                                              |
             [ Express Server (BE) ]                         [ MongoDB Database ]
-            Port: 3000/5000                                     Connection String
+            Port: 3000                                         Connection String
                     |
                     +----------------------+
                     |                      |
             [ Session Store ]      [ Email Service ]
-            (Memory/Redis)         (Gmail SMTP)
+            (MongoDB/Redis)        (Gmail SMTP)
 ```
 
 ---
@@ -60,23 +60,23 @@ FE Architecture:
 +--------+---------+
 | Components Layer |
 | - Layout         |
-| - Navbar         |
+| - Sidebar        |
 | - ProjectCard    |
 | - MessageList    |
 | - CursorFollower |
+| - TextTransition |
 +--------+---------+
          |
 +--------+---------+
 |   Context Layer |
 | - ThemeContext  |
-| - AuthContext   |
+| - CursorFollowerContext |
 +--------+---------+
          |
 +--------+---------+
 |  Hooks Layer    |
 | - useAuth       |
 | - useGuestbook  |
-| - useProjects   |
 +--------+---------+
          |
 +--------+---------+
@@ -118,8 +118,8 @@ BE Architecture:
 |   Routes Layer   |
 | - /auth/*        |
 | - /api/guestbook |
-| - /api/projects |
-| - /api/techstack|
+| - /api/projects  |
+| - /api/techstack |
 | - /api/contact  |
 +--------+---------+
          |
@@ -261,7 +261,7 @@ Send Contact Email:
 | GET | /auth/github | Initiate GitHub OAuth | No | - | Redirect |
 | GET | /auth/github/callback | GitHub callback | No | - | Redirect |
 | GET | /auth/logout | Logout user | No | - | Redirect |
-| GET | /auth/me | Get current user | No | - | `{ user: User \| null }` |
+| GET | /auth/me | Get current user | No | - | `{ user: User | null }` |
 
 #### Guestbook API
 
@@ -447,7 +447,7 @@ interface TechStackCategory {
 
 ```env
 # Server
-PORT=5000
+PORT=3000
 NODE_ENV=production
 FE_URL=https://your-domain.com
 
@@ -495,6 +495,9 @@ SMTP_PASS=<app_password>
                                        |
                                    [ MongoDB ]
                                    (Atlas/Local)
+                                       |
+                                   [ Redis ]
+                                   (Optional)
 ```
 
 ### 7.2 Nginx Configuration
@@ -516,7 +519,7 @@ server {
 
     # Backend API
     location /api/ {
-        proxy_pass http://localhost:5000;
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -526,7 +529,7 @@ server {
 
     # Auth Routes
     location /auth/ {
-        proxy_pass http://localhost:5000;
+        proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -567,7 +570,7 @@ server {
 ## 9. Scalability Considerations
 
 ### 9.1 Current Limitations
-- In-memory session storage (not production-ready)
+- Default in-memory session storage (not production-ready)
 - Single MongoDB instance
 - Single Express server instance
 
@@ -575,7 +578,7 @@ server {
 
 | Component | Current | Recommended for Scale |
 |-----------|---------|----------------------|
-| Session Store | Memory | MongoDB store or Redis |
+| Session Store | Memory | MongoDB store (connect-mongo) or Redis |
 | Database | Single MongoDB | MongoDB Atlas cluster |
 | Backend | Single instance | PM2 cluster / Container |
 | Static Assets | Local | CDN (CloudFront) |
@@ -609,11 +612,15 @@ app.get('/health', (req, res) => {
 ├── FE/                           # Frontend
 │   ├── src/
 │   │   ├── components/          # React components
+│   │   │   ├── layout/         # Layout, Sidebar
+│   │   │   ├── guestbook/     # LoginPrompt, MessageForm, MessageList
+│   │   │   ├── CursorFollower.tsx
+│   │   │   └── TextTransition.tsx
 │   │   ├── pages/              # Page components
-│   │   ├── context/            # ThemeContext, AuthContext
-│   │   ├── hooks/              # Custom hooks
-│   │   ├── lib/                # Utilities (api.ts, utils.ts)
-│   │   ├── types/              # TypeScript types
+│   │   ├── contexts/          # ThemeContext, CursorFollowerContext
+│   │   ├── hooks/             # Custom hooks
+│   │   ├── lib/               # Utilities (api.ts, utils.ts)
+│   │   ├── types/             # TypeScript types
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   └── package.json
@@ -621,21 +628,24 @@ app.get('/health', (req, res) => {
 ├── BE/                           # Backend
 │   ├── src/
 │   │   ├── middleware/         # Admin middleware
-│   │   ├── models/              # Mongoose models
-│   │   ├── routes/             # API routes
-│   │   ├── strategies/         # OAuth strategies
-│   │   ├── scripts/            # Seed scripts
+│   │   ├── models/            # Mongoose models
+│   │   ├── routes/           # API routes
+│   │   ├── strategies/        # OAuth strategies
+│   │   ├── scripts/           # Seed scripts
 │   │   └── server.ts
+│   ├── Dockerfile
+│   ├── docker-compose.yml
 │   └── package.json
 │
 └── docs/                         # Documentation
     ├── project-overview-pdr.md
     ├── codebase-summary.md
     ├── code-standards.md
-    └── system-architecture.md
+    ├── system-architecture.md
+    └── deployment-guide.md
 ```
 
 ---
 
-*Document Version: 1.1*
+*Document Version: 1.2*
 *Last Updated: 2026-03-08*

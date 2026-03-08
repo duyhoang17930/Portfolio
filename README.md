@@ -16,21 +16,25 @@ A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects,
 ### Frontend
 - React 19.2.0
 - TypeScript 5.9
-- Vite 7.3
-- Tailwind CSS 4.2
-- React Router
-- Axios
+- Vite 7.3.1
+- Tailwind CSS 4.2.1
+- React Router DOM 7.13.1
+- Axios 1.13.6
+- @react-spring/web 10.0.3
 
 ### Backend
-- Express 5.2
-- TypeScript 5.9
-- Passport.js (Google & GitHub OAuth)
-- Mongoose ODM
+- Express 5.2.1
+- TypeScript 5.9.3
+- Passport.js 0.7.0 (Google & GitHub OAuth)
+- Mongoose 9.2.4
 - MongoDB
+- express-session 1.19.0
+- Nodemailer 8.0.1
+- Redis support for session store
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - MongoDB (local or Atlas)
 - Google OAuth credentials (Google Cloud Console)
 - GitHub OAuth credentials (GitHub Developer Settings)
@@ -72,7 +76,7 @@ npm install
 
 # Create environment file
 cp .env.example .env
-# Edit .env with API URL
+# Edit .env with API URL (default: http://localhost:3000)
 
 # Start development server
 npm run dev
@@ -86,31 +90,30 @@ The frontend runs on `http://localhost:5173` by default.
 
 ```env
 # Server
-PORT=
-NODE_ENV=
-FE_URL=
+PORT=3000
+NODE_ENV=development
+FE_URL=http://localhost:5173
 
 # Database
-MONGO_URI=
+MONGO_URI=mongodb://localhost:27017/portfolio
 
 # Session
-SESSION_SECRET=
+SESSION_SECRET=your-session-secret-min-32-chars
 
 # Google OAuth
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_CALLBACK_URL=
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
 # GitHub OAuth
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-GITHUB_CALLBACK_URL=
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+GITHUB_CALLBACK_URL=http://localhost:3000/auth/github/callback
 
-#Gmail
-GMAIL_USER=
-GMAIL_APP_PASSWORD=
-CONTACT_TO_EMAIL=
-
+# Email (Nodemailer)
+GMAIL_USER=your-email@gmail.com
+GMAIL_APP_PASSWORD=your-app-password
+CONTACT_TO_EMAIL=your-email@gmail.com
 ```
 
 ### Frontend (FE/.env)
@@ -149,16 +152,15 @@ Collections created:
 
 ## Making a User Admin
 
-After logging in with OAuth, use the admin seed script:
+After logging in with OAuth, use MongoDB Compass or CLI to update:
 
-```bash
-cd BE
-npm run seed:admin <user_email>
+```javascript
+db.users.updateOne({ email: "your-email@example.com" }, { $set: { isAdmin: true } })
 ```
 
-Or manually update in MongoDB:
-```javascript
-db.users.updateOne({ email: "<user_email>" }, { $set: { isAdmin: true } })
+Or use the seed script:
+```bash
+npm run seed:admin
 ```
 
 ## API Endpoints
@@ -216,7 +218,7 @@ npm run preview  # Preview production build
 npm run dev         # Start development server (watch mode)
 npm run build       # Compile TypeScript
 npm start           # Start production server
-npm run seed:admin  # Create admin user (usage: npm run seed:admin <email>)
+npm run seed:admin  # Create admin user
 npm run seed:projects # Seed sample projects
 npm run seed:techstack # Seed tech stack categories
 ```
@@ -228,29 +230,37 @@ Portfolio/
 ├── FE/                     # Frontend
 │   ├── src/
 │   │   ├── components/    # React components
-│   │   ├── pages/         # Page components
-│   │   ├── hooks/         # Custom hooks
-│   │   ├── lib/           # Utilities
-│   │   ├── types/         # TypeScript types
+│   │   │   ├── layout/   # Layout, Sidebar
+│   │   │   ├── guestbook/ # LoginPrompt, MessageForm, MessageList
+│   │   │   ├── CursorFollower.tsx
+│   │   │   └── TextTransition.tsx
+│   │   ├── pages/        # Page components
+│   │   ├── contexts/     # ThemeContext, CursorFollowerContext
+│   │   ├── hooks/       # useAuth, useGuestbook
+│   │   ├── lib/         # api.ts, utils.ts
+│   │   ├── types/       # TypeScript types
 │   │   └── App.tsx
+│   ├── public/          # Static assets
 │   └── package.json
 │
 ├── BE/                     # Backend
 │   ├── src/
-│   │   ├── config/        # Configuration
-│   │   ├── middleware/    # Express middleware
-│   │   ├── models/        # Database models
-│   │   ├── routes/        # API routes
-│   │   ├── strategies/    # OAuth strategies
-│   │   ├── scripts/       # Seed scripts
+│   │   ├── middleware/    # Admin middleware
+│   │   ├── models/        # Mongoose models
+│   │   ├── routes/       # API routes
+│   │   ├── strategies/   # OAuth strategies
+│   │   ├── scripts/      # Seed scripts
 │   │   └── server.ts
+│   ├── Dockerfile
+│   ├── docker-compose.yml
 │   └── package.json
 │
 ├── docs/                   # Documentation
 │   ├── project-overview-pdr.md
 │   ├── codebase-summary.md
 │   ├── code-standards.md
-│   └── system-architecture.md
+│   ├── system-architecture.md
+│   └── deployment-guide.md
 │
 └── README.md
 ```
@@ -265,9 +275,9 @@ Portfolio/
 
 See [Deployment Guide](./docs/deployment-guide.md) for step-by-step instructions:
 - Frontend: Deploy to Vercel
-- Backend: Deploy to Google Cloud VPS with Docker/PM2
+- Backend: Deploy to VPS with Docker/PM2
 - Database: MongoDB on Atlas or self-hosted
-- Cache: Redis (Cloud or self-hosted)
+- Session Store: Redis (optional) or MongoDB
 - SSL: Nginx with Let's Encrypt
 
 ## Documentation

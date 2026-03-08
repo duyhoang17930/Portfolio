@@ -23,6 +23,9 @@ import contactRoutes from './routes/contact.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for production (needed for secure cookies behind reverse proxy)
+app.set("trust proxy", 1);
+
 // Middleware
 app.use(cors({
     origin: process.env.FE_URL || 'http://localhost:5173',
@@ -39,7 +42,7 @@ async function initSessionStore(): Promise<session.Store> {
         console.log('Redis URL:', process.env.REDIS_URL.replace(/:.*@/, ':****@')); // Hide password
 
         try {
-            const redisClient = new (Redis as any)(process.env.REDIS_URL);
+            const redisClient = new (Redis as any)(process.env.REDIS_URL, { tls: {} });
 
             redisClient.on('error', (err: Error) => console.error('Redis error:', err.message));
             redisClient.on('connect', () => console.log('Redis connected'));
@@ -83,8 +86,8 @@ initSessionStore().then((sessionStore) => {
         saveUninitialized: false,
         cookie: {
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            secure: true,
+            sameSite: 'none',
             httpOnly: true,
             path: '/'
         }

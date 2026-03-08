@@ -1,9 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import session from 'express-session';
+import session, { MemoryStore } from 'express-session';
 import passport from 'passport';
 import mongoose from 'mongoose';
 import MongoStore from 'connect-mongo';
+import Redis from 'ioredis';
+import { RedisStore } from 'connect-redis';
 import dotenv from 'dotenv';
 
 // Load strategies (registers them with passport)
@@ -28,18 +30,30 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Session with MongoDB store
+// Session configuration
 const mongoUri = process.env.MONGO_URI || process.env.DB_URI || 'mongodb://localhost:27017/portfolio';
 
+// Determine session store
+let sessionStore: session.Store;
+
+if (process.env.REDIS_URL) {
+    console.log('Using Redis for session store');
+    const redisClient = new (Redis as any)(process.env.REDIS_URL);
+    sessionStore = new RedisStore({ client: redisClient });
+} else {
+    console.log('Using MongoDB for session store');
+    sessionStore = MongoStore.create({
+        mongoUrl: mongoUri,
+        collectionName: 'sessions',
+        ttl: 7 * 24 * 60 * 60
+    });
+}
+
 app.use(session({
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'secret',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: mongoUri,
-        collectionName: 'sessions',
-        ttl: 7 * 24 * 60 * 60 // 7 days
-    }),
     cookie: {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         secure: process.env.NODE_ENV === 'production',

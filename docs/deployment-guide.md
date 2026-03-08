@@ -29,6 +29,9 @@ Step-by-step guide to deploy your Portfolio application with:
 # Install Node.js 20+
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs
+
+# Install pnpm (required for backend)
+npm install -g pnpm
 ```
 
 ---
@@ -91,9 +94,12 @@ sudo apt install -y curl wget git vim unzip software-properties-common
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 
+# Install pnpm (required for backend)
+npm install -g pnpm
+
 # Verify installation
 node --version  # Should show v20.x.x
-npm --version
+pnpm --version
 ```
 
 ### Step 2.5: Install Docker
@@ -199,88 +205,12 @@ redis-cli ping  # Should return PONG
 
 ## Part 5: Backend Docker Setup
 
-### Step 5.1: Create Dockerfile
-Create `BE/Dockerfile`:
-```dockerfile
-# Stage 1: Build
-FROM node:20-alpine AS builder
+The Docker files are already included in your BE folder:
+- `BE/Dockerfile` - Multi-stage build with pnpm
+- `BE/docker-compose.yml` - Container orchestration
+- `BE/.dockerignore` - Excludes unnecessary files from build
 
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-COPY tsconfig.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy source
-COPY . .
-
-# Build TypeScript
-RUN npm run build
-
-# Stage 2: Production
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
-
-# Copy built files
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/package-lock.json ./
-
-USER nodejs
-
-EXPOSE 3000
-
-CMD ["node", "dist/server.js"]
-```
-
-### Step 5.2: Create docker-compose.yml
-Create `BE/docker-compose.yml`:
-```yaml
-version: '3.8'
-
-services:
-  backend:
-    build: .
-    container_name: portfolio-backend
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - MONGO_URI=${MONGO_URI}
-      - SESSION_SECRET=${SESSION_SECRET}
-      - FE_URL=${FE_URL}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
-      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
-      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
-      - GITHUB_CALLBACK_URL=${GITHUB_CALLBACK_URL}
-      - GMAIL_USER=${GMAIL_USER}
-      - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
-      - CONTACT_TO_EMAIL=${CONTACT_TO_EMAIL}
-      - REDIS_URL=${REDIS_URL}
-    volumes:
-      - ./logs:/app/logs
-    networks:
-      - backend-network
-
-networks:
-  backend-network:
-    driver: bridge
-```
-
-### Step 5.3: Create .env Production File
+### Step 5.1: Create .env Production File
 Create `BE/.env` on your server:
 ```bash
 # Server

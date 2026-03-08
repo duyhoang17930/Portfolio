@@ -1,13 +1,14 @@
 # Portfolio - Fullstack Portfolio with OAuth Guestbook
 
-A personal portfolio website featuring 6 tabs (Home, About, TechStack, Projects, Contact, Guestbook) with OAuth authentication via Google and GitHub. Includes an admin dashboard for managing portfolio projects.
+A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects, Contact, Guestbook, Admin) with OAuth authentication via Google and GitHub. Includes an admin dashboard for managing portfolio projects and tech stack.
 
 ## Features
 
-- **6 Tab Portfolio**: Home, About, TechStack, Projects, Contact, Guestbook
+- **7 Tab Portfolio**: Home, About, TechStack, Projects, Contact, Guestbook, Admin
 - **OAuth Authentication**: Sign in with Google or GitHub
 - **Guestbook**: Visitors can leave messages after signing in
-- **Admin Dashboard**: Manage projects (CRUD operations)
+- **Admin Dashboard**: Manage projects and tech stack (CRUD operations)
+- **Contact Form**: Send email via Nodemailer
 - **Modern Stack**: React 19, Express 5, TypeScript, Tailwind CSS 4
 
 ## Tech Stack
@@ -24,13 +25,13 @@ A personal portfolio website featuring 6 tabs (Home, About, TechStack, Projects,
 - Express 5.2
 - TypeScript 5.9
 - Passport.js (Google & GitHub OAuth)
-- Sequelize ORM
-- MySQL 8.x
+- Mongoose ODM
+- MongoDB
 
 ## Prerequisites
 
 - Node.js 18+
-- MySQL 8.x
+- MongoDB (local or Atlas)
 - Google OAuth credentials (Google Cloud Console)
 - GitHub OAuth credentials (GitHub Developer Settings)
 
@@ -84,29 +85,32 @@ The frontend runs on `http://localhost:5173` by default.
 ### Backend (BE/.env)
 
 ```env
-PORT=3000
-NODE_ENV=development
-FE_URL=http://localhost:5173
+# Server
+PORT=
+NODE_ENV=
+FE_URL=
 
 # Database
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=portfolio
-DB_USER=root
-DB_PASSWORD=your_password
+MONGO_URI=
 
 # Session
-SESSION_SECRET=your_session_secret_min_32_chars
+SESSION_SECRET=
 
 # Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URL=
 
 # GitHub OAuth
-GITHUB_CLIENT_ID=your_github_client_id
-GITHUB_CLIENT_SECRET=your_github_client_secret
-GITHUB_CALLBACK_URL=http://localhost:3000/auth/github/callback
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GITHUB_CALLBACK_URL=
+
+#Gmail
+GMAIL_USER=
+GMAIL_APP_PASSWORD=
+CONTACT_TO_EMAIL=
+
 ```
 
 ### Frontend (FE/.env)
@@ -135,19 +139,26 @@ VITE_API_URL=http://localhost:3000
 
 ## Database Setup
 
-The database tables will be created automatically by Sequelize when the server starts.
+MongoDB collections are created automatically by Mongoose when the server starts.
 
-Tables created:
+Collections created:
 - `users` - User accounts (OAuth data)
 - `projects` - Portfolio projects
-- `guestbook_messages` - Guestbook entries
+- `guestbookmessages` - Guestbook entries
+- `techstackcategories` - Tech stack categories
 
 ## Making a User Admin
 
-After logging in with OAuth, manually update the user's `isAdmin` flag in the database:
+After logging in with OAuth, use the admin seed script:
 
-```sql
-UPDATE users SET isAdmin = TRUE WHERE id = <user_id>;
+```bash
+cd BE
+npm run seed:admin <user_email>
+```
+
+Or manually update in MongoDB:
+```javascript
+db.users.updateOne({ email: "<user_email>" }, { $set: { isAdmin: true } })
 ```
 
 ## API Endpoints
@@ -175,6 +186,19 @@ UPDATE users SET isAdmin = TRUE WHERE id = <user_id>;
 | PUT | /api/projects/:id | Update project (admin) |
 | DELETE | /api/projects/:id | Delete project (admin) |
 
+### TechStack
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/techstack | Get all categories |
+| POST | /api/techstack | Create category (admin) |
+| PUT | /api/techstack/:id | Update category (admin) |
+| DELETE | /api/techstack/:id | Delete category (admin) |
+
+### Contact
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/contact | Send contact email |
+
 ## Scripts
 
 ### Frontend (FE)
@@ -189,9 +213,12 @@ npm run preview  # Preview production build
 ### Backend (BE)
 
 ```bash
-npm run dev      # Start development server (watch mode)
-npm run build    # Compile TypeScript
-npm start        # Start production server
+npm run dev         # Start development server (watch mode)
+npm run build       # Compile TypeScript
+npm start           # Start production server
+npm run seed:admin  # Create admin user (usage: npm run seed:admin <email>)
+npm run seed:projects # Seed sample projects
+npm run seed:techstack # Seed tech stack categories
 ```
 
 ## Project Structure
@@ -215,6 +242,7 @@ Portfolio/
 │   │   ├── models/        # Database models
 │   │   ├── routes/        # API routes
 │   │   ├── strategies/    # OAuth strategies
+│   │   ├── scripts/       # Seed scripts
 │   │   └── server.ts
 │   └── package.json
 │
@@ -233,17 +261,18 @@ Portfolio/
 - Frontend: http://localhost:5173
 - Backend: http://localhost:3000
 
-### Production (Recommended)
+### Production
 
-1. **Frontend**: Deploy to Vercel
-2. **Backend**: Deploy to VPS with PM2
-3. **Database**: MySQL on VPS or cloud RDS
-4. **SSL**: Use Nginx with Let's Encrypt
-
-See `docs/system-architecture.md` for detailed deployment instructions.
+See [Deployment Guide](./docs/deployment-guide.md) for step-by-step instructions:
+- Frontend: Deploy to Vercel
+- Backend: Deploy to Google Cloud VPS with Docker/PM2
+- Database: MongoDB on Atlas or self-hosted
+- Cache: Redis (Cloud or self-hosted)
+- SSL: Nginx with Let's Encrypt
 
 ## Documentation
 
+- [Deployment Guide](./docs/deployment-guide.md) - Step-by-step production deployment
 - [Project Overview & PDR](./docs/project-overview-pdr.md)
 - [Codebase Summary](./docs/codebase-summary.md)
 - [Code Standards](./docs/code-standards.md)
@@ -255,4 +284,4 @@ ISC
 
 ## Author
 
-[Your Name]
+Duy Hoàng

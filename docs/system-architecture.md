@@ -23,13 +23,13 @@ This document provides a comprehensive overview of the portfolio project's syste
                                            |
                     +----------------------+----------------------+
                     |                                              |
-            [ Express Server (BE) ]                         [ MySQL Database ]
-            Port: 3000/5000                                     Port: 3306
+            [ Express Server (BE) ]                         [ MongoDB Database ]
+            Port: 3000/5000                                     Connection String
                     |
                     +----------------------+
                     |                      |
-            [ Session Store ]      [ File System ]
-            (Memory/Redis)         (Uploads)
+            [ Session Store ]      [ Email Service ]
+            (Memory/Redis)         (Gmail SMTP)
 ```
 
 ---
@@ -63,6 +63,13 @@ FE Architecture:
 | - Navbar         |
 | - ProjectCard    |
 | - MessageList    |
+| - CursorFollower |
++--------+---------+
+         |
++--------+---------+
+|   Context Layer |
+| - ThemeContext  |
+| - AuthContext   |
 +--------+---------+
          |
 +--------+---------+
@@ -82,8 +89,9 @@ FE Architecture:
 +--------+---------+
 |   State         |
 | - React State   |
-| - React Query   |
-| (optional)      |
+| - Local Hooks   |
+| (useState/      |
+|  useEffect)     |
 +--------+---------+
 ```
 
@@ -111,27 +119,23 @@ BE Architecture:
 | - /auth/*        |
 | - /api/guestbook |
 | - /api/projects |
-+--------+---------+
-         |
-+--------+---------+
-| Controllers/    |
-| Services Layer  |
-| - Auth Logic    |
-| - CRUD Ops      |
+| - /api/techstack|
+| - /api/contact  |
 +--------+---------+
          |
 +--------+---------+
 |   Data Layer    |
-| - Sequelize ORM |
-| - MySQL Queries |
+| - Mongoose ODM  |
+| - MongoDB Query |
 +--------+---------+
          |
 +--------+---------+
 |   Database      |
-| - MySQL 8.x     |
-| - Users Table   |
-| - Projects Tbl  |
-| - Guestbook Tbl |
+| - MongoDB       |
+| - Users Coll.   |
+| - Projects Coll |
+| - Guestbook Coll|
+| - TechStack Coll|
 +------------------+
 ```
 
@@ -149,7 +153,7 @@ BE Architecture:
 5. Google redirects to BE: GET /auth/google/callback?code=xxx
 6. BE exchanges code for access token
 7. BE fetches user profile from Google
-8. BE creates/finds user in database
+8. BE creates/finds user in MongoDB
 9. BE establishes session
 10. BE redirects to FE: /guestbook
 11. FE fetches current user: GET /auth/me
@@ -163,96 +167,83 @@ Post Message:
 1. User enters message in form
 2. FE sends: POST /api/guestbook with message
 3. BE checks authentication
-4. BE creates message in database
+4. BE creates message in MongoDB
 5. BE returns created message with user data
 6. FE updates message list
 7. UI displays new message
+```
+
+### 3.3 Contact Form Flow
+
+```
+Send Contact Email:
+1. User fills contact form
+2. FE sends: POST /api/contact with form data
+3. BE validates input
+4. BE uses Nodemailer to send email via Gmail SMTP
+5. BE returns success/failure
+6. UI displays confirmation
 ```
 
 ---
 
 ## 4. Database Schema
 
-### 4.1 Entity Relationship Diagram
+### 4.1 MongoDB Collections
 
-```
-+------------------+       +-----------------------+
-|      users       |       |    guestbook_messages |
-+------------------+       +-----------------------+
-| id (PK)          |<------| userId (FK)           |
-| provider         |       | id (PK)               |
-| providerId       |       | message               |
-| name             |       | createdAt             |
-| email            |       | updatedAt             |
-| avatarUrl        |       +-----------------------+
-| isAdmin          |
-| createdAt        |       +-----------------------+
-| updatedAt        |       |       projects        |
-+------------------+       +-----------------------+
-                            | id (PK)               |
-                            | title                 |
-                            | description           |
-                            | techStack (JSON)     |
-                            | imageUrl             |
-                            | demoUrl              |
-                            | repoUrl              |
-                            | featured             |
-                            | displayOrder         |
-                            | createdAt            |
-                            | updatedAt            |
-                            +-----------------------+
+#### Users Collection
+```javascript
+{
+  _id: ObjectId,
+  provider: "google" | "github",
+  providerId: String,
+  name: String,
+  email: String?,
+  avatarUrl: String?,
+  isAdmin: Boolean,
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
-### 4.2 Table Definitions
-
-#### Users Table
-```sql
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  provider VARCHAR(20) NOT NULL,
-  providerId VARCHAR(255) NOT NULL UNIQUE,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE,
-  avatarUrl TEXT,
-  isAdmin BOOLEAN DEFAULT FALSE,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_provider (provider),
-  INDEX idx_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+#### Projects Collection
+```javascript
+{
+  _id: ObjectId,
+  title: String,
+  description: String?,
+  techStack: String[]?,
+  imageUrl: String?,
+  demoUrl: String?,
+  repoUrl: String?,
+  featured: Boolean,
+  displayOrder: Number,
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
-#### Projects Table
-```sql
-CREATE TABLE projects (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  techStack JSON,
-  imageUrl TEXT,
-  demoUrl VARCHAR(255),
-  repoUrl VARCHAR(255),
-  featured BOOLEAN DEFAULT FALSE,
-  displayOrder INT DEFAULT 0,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_featured (featured),
-  INDEX idx_display_order (displayOrder)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+#### Guestbook Messages Collection
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: User),
+  message: String,
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
-#### Guestbook Messages Table
-```sql
-CREATE TABLE guestbook_messages (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  userId INT NOT NULL,
-  message TEXT NOT NULL,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_user_id (userId),
-  INDEX idx_created_at (createdAt)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+#### TechStack Categories Collection
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  items: String[],
+  displayOrder: Number,
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
 ---
@@ -288,6 +279,21 @@ CREATE TABLE guestbook_messages (
 | POST | /api/projects | Create project | Admin | Project fields | `Project` |
 | PUT | /api/projects/:id | Update project | Admin | Project fields | `Project` |
 | DELETE | /api/projects/:id | Delete project | Admin | - | `{ success: boolean }` |
+
+#### TechStack API
+
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|--------------|----------|
+| GET | /api/techstack | Get all categories | No | - | `[TechStackCategory]` |
+| POST | /api/techstack | Create category | Admin | `{ name: string, items: string[] }` | `TechStackCategory` |
+| PUT | /api/techstack/:id | Update category | Admin | `{ name?: string, items?: string[] }` | `TechStackCategory` |
+| DELETE | /api/techstack/:id | Delete category | Admin | - | `{ success: boolean }` |
+
+#### Contact API
+
+| Method | Endpoint | Description | Auth | Request Body | Response |
+|--------|----------|-------------|------|--------------|----------|
+| POST | /api/contact | Send contact email | No | `{ name, email, message }` | `{ success: boolean }` |
 
 ### 5.2 API Response Formats
 
@@ -326,7 +332,7 @@ CREATE TABLE guestbook_messages (
 #### User
 ```typescript
 interface User {
-  id: number;
+  id: string;
   provider: 'google' | 'github';
   providerId: string;
   name: string;
@@ -341,7 +347,7 @@ interface User {
 #### Project
 ```typescript
 interface Project {
-  id: number;
+  id: string;
   title: string;
   description?: string;
   techStack?: string[];
@@ -358,14 +364,26 @@ interface Project {
 #### GuestbookMessage
 ```typescript
 interface GuestbookMessage {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   message: string;
   user: {
-    id: number;
+    id: string;
     name: string;
     avatarUrl?: string;
   };
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### TechStackCategory
+```typescript
+interface TechStackCategory {
+  id: string;
+  name: string;
+  items: string[];
+  displayOrder: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -423,22 +441,18 @@ interface GuestbookMessage {
 | Session | Secure Cookies | httpOnly, secure, sameSite |
 | API | Rate Limiting | express-rate-limit |
 | Input | Validation | Zod/Joi validators |
-| Database | Parameterized Queries | Sequelize ORM |
+| Database | Parameterized Queries | Mongoose ODM |
 
 ### 6.3 Environment Configuration
 
 ```env
 # Server
-PORT=3000
+PORT=5000
 NODE_ENV=production
 FE_URL=https://your-domain.com
 
-# Database
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=portfolio
-DB_USER=portfolio_user
-DB_PASSWORD=<secure_password>
+# Database (MongoDB)
+MONGODB_URI=mongodb://localhost:27017/portfolio
 
 # Session
 SESSION_SECRET=<32_char_minimum>
@@ -448,10 +462,16 @@ GOOGLE_CLIENT_ID=<from_console>
 GOOGLE_CLIENT_SECRET=<from_console>
 GOOGLE_CALLBACK_URL=https://your-domain.com/auth/google/callback
 
-#GITHUB_CLIENT GitHub OAuth
-_ID=<from_settings>
+# GitHub OAuth
+GITHUB_CLIENT_ID=<from_settings>
 GITHUB_CLIENT_SECRET=<from_settings>
 GITHUB_CALLBACK_URL=https://your-domain.com/auth/github/callback
+
+# Email (Nodemailer)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=<app_password>
 ```
 
 ---
@@ -473,8 +493,8 @@ GITHUB_CALLBACK_URL=https://your-domain.com/auth/github/callback
     [ Vercel (FE) ]              [ VPS (BE) ]
     https://your-domain.com     https://api.your-domain.com
                                        |
-                                   [ MySQL ]
-                                   (RDS/Local)
+                                   [ MongoDB ]
+                                   (Atlas/Local)
 ```
 
 ### 7.2 Nginx Configuration
@@ -496,7 +516,7 @@ server {
 
     # Backend API
     location /api/ {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:5000;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -506,7 +526,7 @@ server {
 
     # Auth Routes
     location /auth/ {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:5000;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -525,32 +545,51 @@ server {
 
 ---
 
-## 8. Scalability Considerations
+## 8. Frontend Visual Effects
 
-### 8.1 Current Limitations
+### 8.1 Custom Cursor Follower
+- Implemented using @react-spring/web
+- Smooth spring-based animation following mouse position
+- Configurable tension and friction
+
+### 8.2 Film Grain Effect
+- CSS-based overlay with noise texture
+- Applied via fixed position element
+- mix-blend-overlay for subtle effect
+
+### 8.3 Chromatic Silhouette Effect
+- RGB shift on silhouette images
+- Creates chromatic aberration effect
+- Applied to hero section imagery
+
+---
+
+## 9. Scalability Considerations
+
+### 9.1 Current Limitations
 - In-memory session storage (not production-ready)
-- Single MySQL instance
+- Single MongoDB instance
 - Single Express server instance
 
-### 8.2 Scaling Recommendations
+### 9.2 Scaling Recommendations
 
 | Component | Current | Recommended for Scale |
 |-----------|---------|----------------------|
-| Session Store | Memory | Redis |
-| Database | Single MySQL | MySQL read replicas |
+| Session Store | Memory | MongoDB store or Redis |
+| Database | Single MongoDB | MongoDB Atlas cluster |
 | Backend | Single instance | PM2 cluster / Container |
 | Static Assets | Local | CDN (CloudFront) |
 
 ---
 
-## 9. Monitoring & Logging
+## 10. Monitoring & Logging
 
-### 9.1 Logging Strategy
+### 10.1 Logging Strategy
 - Use `morgan` for HTTP request logging
 - Use `winston` or `pino` for structured logging
 - Log levels: error, warn, info, debug
 
-### 9.2 Health Checks
+### 10.2 Health Checks
 ```typescript
 app.get('/health', (req, res) => {
   res.json({
@@ -563,7 +602,7 @@ app.get('/health', (req, res) => {
 
 ---
 
-## 10. File Structure Summary
+## 11. File Structure Summary
 
 ```
 /home/ret/Portfolio/
@@ -571,8 +610,9 @@ app.get('/health', (req, res) => {
 │   ├── src/
 │   │   ├── components/          # React components
 │   │   ├── pages/              # Page components
+│   │   ├── context/            # ThemeContext, AuthContext
 │   │   ├── hooks/              # Custom hooks
-│   │   ├── lib/                # Utilities
+│   │   ├── lib/                # Utilities (api.ts, utils.ts)
 │   │   ├── types/              # TypeScript types
 │   │   ├── App.tsx
 │   │   └── main.tsx
@@ -580,13 +620,11 @@ app.get('/health', (req, res) => {
 │
 ├── BE/                           # Backend
 │   ├── src/
-│   │   ├── config/             # Configuration
-│   │   ├── middleware/         # Express middleware
-│   │   ├── models/             # Database models
+│   │   ├── middleware/         # Admin middleware
+│   │   ├── models/              # Mongoose models
 │   │   ├── routes/             # API routes
 │   │   ├── strategies/         # OAuth strategies
-│   │   ├── types/              # TypeScript types
-│   │   ├── utils/              # Utilities
+│   │   ├── scripts/            # Seed scripts
 │   │   └── server.ts
 │   └── package.json
 │
@@ -599,5 +637,5 @@ app.get('/health', (req, res) => {
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: 2026-03-07*
+*Document Version: 1.1*
+*Last Updated: 2026-03-08*

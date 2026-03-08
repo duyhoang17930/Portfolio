@@ -60,18 +60,21 @@ FE/src/
 │   ├── Contact.tsx
 │   ├── Guestbook.tsx
 │   └── Admin.tsx
+├── context/
+│   ├── ThemeContext.tsx    # Dark/light theme
+│   └── AuthContext.tsx     # Authentication state
 ├── hooks/
 │   ├── useAuth.ts
 │   ├── useGuestbook.ts
 │   └── useProjects.ts
 ├── lib/
-│   ├── api.ts             # Axios instance
-│   └── utils.ts           # Utility functions
+│   ├── api.ts              # Axios instance
+│   └── utils.ts            # cn() utility
 ├── types/
-│   └── index.ts          # TypeScript interfaces
+│   └── index.ts            # TypeScript interfaces
 ├── App.tsx
 ├── main.tsx
-└── index.css
+└── index.css               # Tailwind CSS 4
 ```
 
 ### 2.2 Component Guidelines
@@ -119,11 +122,11 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 
 interface UserData {
-  id: number;
+  id: string;
   name: string;
 }
 
-export function useUser(userId: number) {
+export function useUser(userId: string) {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -151,12 +154,39 @@ export function useUser(userId: number) {
 ### 2.4 State Management
 - Use `useState` for component-local state
 - Use custom hooks for shared state logic
-- Use React Query or SWR for server state (recommended)
+- Use React Context for global state (ThemeContext, AuthContext)
+- No external state management (Redux/Zustand)
 
-### 2.5 Styling (Tailwind CSS)
+### 2.5 Styling (Tailwind CSS 4)
+
+#### Using cn() Utility
+```typescript
+// src/lib/utils.ts
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
 
 ```tsx
-// Prefer utility classes over custom CSS
+// Using cn() for conditional classes
+import { cn } from '@/lib/utils';
+
+<div className={cn(
+  "base-class",
+  isActive && "active-class",
+  variant === 'primary' ? "bg-blue-500" : "bg-gray-500"
+)}>
+  Content
+</div>
+```
+
+#### Tailwind CSS 4 Syntax
+```tsx
+// Tailwind CSS 4 - Direct utility usage (no @apply needed)
+// Import via @tailwindcss/vite plugin in vite.config.ts
 <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-md">
   <h1 className="text-2xl font-bold text-gray-900">Title</h1>
   <button className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700">
@@ -172,7 +202,7 @@ export function useUser(userId: number) {
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
   withCredentials: true,
 });
 
@@ -196,6 +226,34 @@ api.interceptors.response.use(
 export default api;
 ```
 
+### 2.7 Visual Effects
+
+#### Custom Cursor Follower (React Spring)
+```typescript
+import { useSpring, animated } from '@react-spring/web';
+
+const cursorSpring = useSpring({
+  x: mousePosition.x,
+  y: mousePosition.y,
+  config: { tension: 500, friction: 28 }
+});
+
+return (
+  <animated.div
+    style={{
+      transform: cursorSpring.to((x, y) => `translate(${x}px, ${y}px)`)
+    }}
+    className="fixed pointer-events-none z-50"
+  />
+);
+```
+
+#### Film Grain Effect
+```tsx
+// CSS-based film grain overlay
+<div className="fixed inset-0 pointer-events-none opacity-15 bg-[url('/grain.png')] mix-blend-overlay" />
+```
+
 ---
 
 ## 3. Backend Standards (Express + TypeScript)
@@ -203,30 +261,26 @@ export default api;
 ### 3.1 Project Structure
 ```
 BE/src/
-├── config/
-│   ├── database.ts        # Sequelize configuration
-│   └── passport.ts        # Passport strategies
+├── server.ts              # Entry point
 ├── middleware/
-│   ├── auth.ts            # Authentication middleware
 │   └── admin.ts           # Admin check middleware
 ├── models/
-│   ├── index.ts           # Database models
+│   ├── index.ts           # Mongoose models
 │   ├── User.ts
 │   ├── Project.ts
-│   └── GuestbookMessage.ts
+│   ├── GuestbookMessage.ts
+│   └── TechStackCategory.ts
 ├── routes/
 │   ├── auth.ts            # Authentication routes
 │   ├── guestbook.ts       # Guestbook routes
-│   └── projects.ts        # Projects routes
+│   ├── projects.ts        # Projects routes
+│   ├── techstack.ts       # TechStack routes
+│   └── contact.ts         # Contact email routes
 ├── strategies/
 │   ├── google.ts          # Google OAuth strategy
 │   └── github.ts          # GitHub OAuth strategy
-├── types/
-│   └── express.d.ts       # Express type extensions
-├── utils/
-│   └── helpers.ts         # Utility functions
-├── server.ts              # Entry point
-└── app.ts                 # Express app configuration
+└── scripts/
+    └── seed-*.ts          # Database seeding scripts
 ```
 
 ### 3.2 Express Routes
@@ -286,7 +340,7 @@ import { Request, Response, NextFunction } from 'express';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
-    id: number;
+    id: string;
     name: string;
     isAdmin: boolean;
   };
@@ -318,75 +372,35 @@ export function requireAdmin(
 }
 ```
 
-### 3.4 Database Models (Sequelize)
+### 3.4 Database Models (Mongoose)
 
 ```typescript
 // models/User.ts
-import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from './index.js';
+import mongoose, { Schema, Document } from 'mongoose';
 
-interface UserAttributes {
-  id: number;
+export interface IUser extends Document {
   provider: string;
   providerId: string;
   name: string;
   email?: string;
   avatarUrl?: string;
   isAdmin: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}
-
-export class User extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes {
-  declare id: number;
-  declare provider: string;
-  declare providerId: string;
-  declare name: string;
-  declare email?: string;
-  declare avatarUrl?: string;
-  declare isAdmin: boolean;
-  declare readonly createdAt: Date;
-  declare readonly updatedAt: Date;
-}
-
-User.init({
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  provider: {
-    type: DataTypes.STRING(20),
-    allowNull: false,
-  },
-  providerId: {
-    type: DataTypes.STRING(255),
-    allowNull: false,
-    unique: true,
-  },
-  name: {
-    type: DataTypes.STRING(255),
-    allowNull: false,
-  },
-  email: {
-    type: DataTypes.STRING(255),
-    allowNull: true,
-    unique: true,
-  },
-  avatarUrl: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-  },
-  isAdmin: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-  },
+const UserSchema = new Schema<IUser>({
+  provider: { type: String, required: true },
+  providerId: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  email: { type: String, unique: true, sparse: true },
+  avatarUrl: { type: String },
+  isAdmin: { type: Boolean, default: false },
 }, {
-  sequelize,
-  tableName: 'users',
   timestamps: true,
 });
+
+export const User = mongoose.model<IUser>('User', UserSchema);
 ```
 
 ---
@@ -465,7 +479,7 @@ router.post('/', async (req, res) => {
 1. **Never expose secrets** - Use environment variables
 2. **Validate input** - Use validation libraries (Zod, Joi)
 3. **Sanitize output** - Prevent XSS attacks
-4. **Use parameterized queries** - Prevent SQL injection
+4. **Use parameterized queries** - Prevent injection (Mongoose handles this)
 5. **Implement CORS properly** - Whitelist specific origins
 6. **Use secure cookies** - httpOnly, secure, sameSite
 7. **Rate limiting** - Protect against brute force attacks
@@ -478,7 +492,7 @@ router.post('/', async (req, res) => {
 ### Unit Tests
 - Test individual functions and components
 - Aim for >80% coverage on business logic
-- Use Jest for both FE and BE
+- Use Vitest or Jest for both FE and BE
 
 ### Integration Tests
 - Test API endpoints
@@ -492,7 +506,7 @@ router.post('/', async (req, res) => {
 /**
  * Component/Function description
  * @author Your Name
- * @date 2026-03-07
+ * @date 2026-03-08
  * @param paramName - Parameter description
  * @returns Return description
  */
@@ -521,5 +535,5 @@ router.post('/', async (req, res) => {
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: 2026-03-07*
+*Document Version: 1.1*
+*Last Updated: 2026-03-08*

@@ -5,12 +5,12 @@
 **Project Name:** Fullstack Portfolio with OAuth Guestbook
 **Project Type:** Full-stack web application
 **Status:** In Development
-**Priority:** P2
-**Estimated Effort:** 8 hours
+**Priority:** P1
+**Estimated Effort:** 20 hours
 
 ### Description
 
-A personal portfolio website featuring 6 main tabs (Home, About, TechStack, Projects, Contact, Guestbook) with OAuth authentication via Google and GitHub. The project includes an admin dashboard for managing portfolio projects and a guestbook where visitors can leave messages after signing in.
+A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects, Contact, Guestbook, Admin) with OAuth authentication via Google and GitHub. The project includes an admin dashboard for managing portfolio projects and techstack categories, a guestbook where visitors can leave messages after signing in, and a contact form for reaching out.
 
 ---
 
@@ -19,45 +19,40 @@ A personal portfolio website featuring 6 main tabs (Home, About, TechStack, Proj
 ### Frontend
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| React | 19.2.0 | UI framework |
-| TypeScript | ~5.9.3 | Type safety |
-| Vite | 7.3.1 | Build tool |
-| Tailwind CSS | 4.2.1 | Styling |
-| React Router | Latest | Client-side routing |
+| React | 19.x | UI framework |
+| TypeScript | 5.9.3 | Type safety |
+| Vite | 7.x | Build tool |
+| Tailwind CSS | 4.x | Styling |
+| React Router | 7.x | Client-side routing |
 | Axios | Latest | HTTP client |
-| shadcn/ui | Latest | Component library |
+| @react-spring/web | Latest | Animation library |
+| clsx + tailwind-merge | Latest | Class name utility |
 
 ### Backend
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | Express | 5.2.1 | Web framework |
 | TypeScript | 5.9.3 | Type safety |
-| Node.js | Latest | Runtime |
-| Passport.js | Latest | OAuth authentication |
-| Sequelize | Latest | ORM for MySQL |
-| MySQL | 8.x | Database |
+| Node.js | ES2020 | Runtime |
+| MongoDB | Latest | Database |
+| Mongoose | 9.2.4 | ODM |
+| Passport.js | 0.7.0 | OAuth authentication |
 | express-session | Latest | Session management |
-
-### Development Tools
-| Technology | Purpose |
-|------------|---------|
-| ESLint | Code linting |
-| Prettier | Code formatting |
-| ts-node-dev | TypeScript development |
-| tsx | TypeScript executor |
+| Nodemailer | 8.0.1 | Email sending |
 
 ---
 
 ## 3. Core Features
 
-### 3.1 Public Pages (6 Tabs)
+### 3.1 Public Pages (7 Tabs)
 
 1. **Home** - Hero section with name, title, and introduction
 2. **About** - Personal background and experience
-3. **TechStack** - Skills and technologies used
+3. **TechStack** - Skills and technologies displayed from API
 4. **Projects** - Portfolio projects fetched from API (publicly viewable)
-5. **Contact** - Contact form for reaching out
+5. **Contact** - Contact form for reaching out (sends email via Nodemailer)
 6. **Guestbook** - Message board for visitor interactions
+7. **Admin** - Dashboard for managing content (admin only)
 
 ### 3.2 Authentication
 
@@ -72,57 +67,84 @@ A personal portfolio website featuring 6 main tabs (Home, About, TechStack, Proj
   - Create new projects
   - Edit existing projects
   - Delete projects
+  - Create new techstack categories
+  - Edit techstack categories
+  - Delete techstack categories
   - View all guestbook messages
 
-### 3.4 Database Schema
+### 3.4 Visual Effects
 
-#### Users Table
-```sql
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  provider VARCHAR(20) NOT NULL,
-  providerId VARCHAR(255) NOT NULL UNIQUE,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE,
-  avatarUrl TEXT,
-  isAdmin BOOLEAN DEFAULT FALSE,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+- **Custom Cursor Follower** - Spring-based animation following mouse position using @react-spring/web
+- **Film Grain Effect** - CSS overlay with noise texture
+- **Chromatic Silhouette Effect** - RGB shift on hero imagery
+
+### 3.5 Theme Support
+
+- **Dark/Light Mode** - Toggle via ThemeContext
+- **localStorage Persistence** - Theme preference saved in localStorage
+
+---
+
+## 4. Database Schema (MongoDB)
+
+### Users Collection
+```javascript
+{
+  _id: ObjectId,
+  provider: "google" | "github",
+  providerId: String,
+  name: String,
+  email: String,
+  avatarUrl: String,
+  isAdmin: Boolean,
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
-#### Projects Table
-```sql
-CREATE TABLE projects (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  techStack JSON,
-  imageUrl TEXT,
-  demoUrl VARCHAR(255),
-  repoUrl VARCHAR(255),
-  featured BOOLEAN DEFAULT FALSE,
-  displayOrder INT DEFAULT 0,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+### Projects Collection
+```javascript
+{
+  _id: ObjectId,
+  title: String,
+  description: String,
+  techStack: String[],
+  imageUrl: String,
+  demoUrl: String,
+  repoUrl: String,
+  featured: Boolean,
+  displayOrder: Number,
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
-#### Guestbook Messages Table
-```sql
-CREATE TABLE guestbook_messages (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  userId INT NOT NULL,
-  message TEXT NOT NULL,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
-);
+### Guestbook Messages Collection
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: User),
+  message: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### TechStack Categories Collection
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  items: String[],
+  displayOrder: Number,
+  createdAt: Date,
+  updatedAt: Date
+}
 ```
 
 ---
 
-## 4. API Endpoints
+## 5. API Endpoints
 
 ### Authentication Routes
 | Method | Endpoint | Description | Auth |
@@ -149,14 +171,27 @@ CREATE TABLE guestbook_messages (
 | PUT | /api/projects/:id | Update project | Admin only |
 | DELETE | /api/projects/:id | Delete project | Admin only |
 
+### TechStack API
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | /api/techstack | Get all categories | No |
+| POST | /api/techstack | Create category | Admin only |
+| PUT | /api/techstack/:id | Update category | Admin only |
+| DELETE | /api/techstack/:id | Delete category | Admin only |
+
+### Contact API
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | /api/contact | Send contact email | No |
+
 ---
 
-## 5. Functional Requirements
+## 6. Functional Requirements
 
 ### F1: Public Portfolio Display
-- All 6 tabs must be accessible without authentication
+- All 7 tabs must be accessible without authentication
 - Projects page fetches data from `/api/projects` endpoint
-- TechStack page displays static technology list
+- TechStack page fetches data from `/api/techstack` endpoint
 
 ### F2: OAuth Authentication
 - Users can sign in with Google or GitHub
@@ -171,15 +206,25 @@ CREATE TABLE guestbook_messages (
 ### F4: Admin Dashboard
 - Only accessible to users with `isAdmin = true`
 - Full CRUD operations for projects
+- Full CRUD operations for techstack categories
 - Visual indication of admin status in UI
 
 ### F5: Contact Form
 - Public contact form for visitors
-- Form data logged or sent to configured email service
+- Form data sent via Nodemailer using Gmail SMTP
+
+### F6: Theme Switching
+- Dark/light mode toggle available
+- Theme preference persisted in localStorage
+
+### F7: Visual Effects
+- Custom cursor follower animation
+- Film grain overlay effect
+- Chromatic silhouette effect on hero
 
 ---
 
-## 6. Non-Functional Requirements
+## 7. Non-Functional Requirements
 
 ### N1: Performance
 - Frontend initial load under 3 seconds
@@ -199,113 +244,152 @@ CREATE TABLE guestbook_messages (
 
 ---
 
-## 7. Implementation Phases
+## 8. Implementation Phases
 
 ### Phase 1: Project Setup
-- Install FE dependencies (shadcn/ui, Tailwind, React Router, Axios)
-- Install BE dependencies (Passport.js, Sequelize, MySQL, express-session)
-- Configure TypeScript and build tools
+- [x] Install FE dependencies (Tailwind, React Router, Axios)
+- [x] Install BE dependencies (Passport.js, Mongoose, express-session)
+- [x] Configure TypeScript and build tools
+- [x] Setup MongoDB connection
 
 ### Phase 2: Backend Development
-- Setup Express server with TypeScript
-- Configure MySQL connection with Sequelize
-- Create User, Project, and GuestbookMessage models
-- Implement Passport.js OAuth (Google + GitHub)
-- Create API endpoints for guestbook and projects
+- [x] Setup Express server with TypeScript
+- [x] Configure MongoDB connection with Mongoose
+- [x] Create User, Project, GuestbookMessage, TechStackCategory models
+- [x] Implement Passport.js OAuth (Google + GitHub)
+- [x] Create API endpoints for guestbook
+- [x] Create Projects API (CRUD for admin)
+- [x] Create TechStack API (CRUD for admin)
+- [x] Create Contact API (email sending)
 
 ### Phase 3: Frontend Development
-- Setup React Router with tab navigation
-- Create layout with navigation
-- Build 7 pages (Home, About, TechStack, Projects, Contact, Guestbook, Admin)
-- Implement OAuth login flow
-- Connect to backend API
+- [x] Setup React Router with tab navigation
+- [x] Create layout with navigation
+- [x] Build 7 pages (Home, About, TechStack, Projects, Contact, Guestbook, Admin)
+- [x] Implement OAuth login flow
+- [x] Connect to backend API
+- [x] Create Projects page with API data
+- [x] Create TechStack page with API data
+- [x] Implement Admin dashboard for project management
+- [x] Implement Admin dashboard for techstack management
+- [x] Add ThemeContext for dark/light mode
+- [x] Add visual effects (cursor, film grain, chromatic)
 
 ### Phase 4: Deployment
-- Dockerize backend
-- Configure Nginx with SSL
-- Deploy to Vercel (FE) and VPS (BE)
+- [ ] Dockerize backend
+- [ ] Configure Nginx with SSL
+- [ ] Deploy to Vercel (FE) and VPS (BE)
 
 ---
 
-## 8. Acceptance Criteria
+## 9. Acceptance Criteria
 
 ### AC1: Application Launch
-- [ ] Frontend starts on port 5173
-- [ ] Backend starts on port 3000
-- [ ] Database connection established
+- [x] Frontend starts on port 5173
+- [x] Backend starts on port 5000
+- [x] Database connection established
 
 ### AC2: Authentication
-- [ ] Google OAuth flow completes successfully
-- [ ] GitHub OAuth flow completes successfully
-- [ ] User session persists on page refresh
-- [ ] Logout clears session
+- [x] Google OAuth flow completes successfully
+- [x] GitHub OAuth flow completes successfully
+- [x] User session persists on page refresh
+- [x] Logout clears session
 
 ### AC3: Guestbook
-- [ ] Messages load without authentication
-- [ ] Authenticated users can post messages
-- [ ] Users can delete their own messages
-- [ ] Unauthenticated users see login prompt
+- [x] Messages load without authentication
+- [x] Authenticated users can post messages
+- [x] Users can delete their own messages
+- [x] Unauthenticated users see login prompt
 
 ### AC4: Admin Dashboard
-- [ ] Admin-only access enforced
-- [ ] CRUD operations work correctly
-- [ ] Non-admins cannot access endpoints
+- [x] Admin-only access enforced
+- [x] CRUD operations for projects work correctly
+- [x] CRUD operations for techstack work correctly
+- [x] Non-admins cannot access endpoints
 
 ### AC5: Projects Page
-- [ ] Projects load from API
-- [ ] Featured projects displayed first
-- [ ] Links to demo and repo work
+- [x] Projects load from API
+- [x] Featured projects displayed first
+- [x] Links to demo and repo work
+
+### AC6: TechStack Page
+- [x] Categories load from API
+- [x] Items displayed under categories
+
+### AC7: Contact Form
+- [x] Form submits successfully
+- [x] Email sent via Nodemailer
+
+### AC8: Theme
+- [x] Dark/light mode toggle works
+- [x] Theme preference persists
+
+### AC9: Visual Effects
+- [x] Custom cursor follower animates smoothly
+- [x] Film grain overlay visible
+- [x] Chromatic effect applied to hero
 
 ---
 
-## 9. Environment Variables
+## 10. Environment Variables
 
 ### Backend (.env)
 ```env
-PORT=3000
+PORT=5000
 NODE_ENV=development
 FE_URL=http://localhost:5173
 
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=portfolio
-DB_USER=root
-DB_PASSWORD=your_password
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/portfolio
 
+# Session
 SESSION_SECRET=your_session_secret_min_32_chars
 
+# Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:5000/auth/google/callback
 
+# GitHub OAuth
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
-GITHUB_CALLBACK_URL=http://localhost:3000/auth/github/callback
+GITHUB_CALLBACK_URL=http://localhost:5000/auth/github/callback
+
+# Email (Nodemailer)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your_app_password
 ```
 
 ### Frontend (.env)
 ```env
-VITE_API_URL=http://localhost:3000
+VITE_API_URL=http://localhost:5000
 ```
 
 ---
 
-## 10. Roadmap
+## 11. Roadmap
 
 ### v1.0.0 (Initial Release)
-- 6 tab portfolio with OAuth guestbook
-- Admin dashboard for project management
-- Basic deployment
+- [x] 7 tab portfolio with OAuth guestbook
+- [x] Admin dashboard for project management
+- [x] Admin dashboard for techstack management
+- [x] Contact form with email sending
+- [x] Dark/light theme toggle
+- [x] Visual effects (cursor, film grain, chromatic)
+- [ ] Basic deployment
 
 ### Future Enhancements
 - Blog functionality
 - Project filtering and search
 - Real-time guestbook updates (WebSocket)
 - Analytics dashboard
-- Dark/light theme toggle
+- Performance optimization
+- PWA support
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: 2026-03-07*
+*Document Version: 1.1*
+*Last Updated: 2026-03-08*
 *Status: Active*

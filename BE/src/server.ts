@@ -4,7 +4,7 @@ import session, { MemoryStore } from 'express-session';
 import passport from 'passport';
 import mongoose from 'mongoose';
 import MongoStore from 'connect-mongo';
-import Redis from 'ioredis';
+import { createClient } from 'redis';
 import { RedisStore } from 'connect-redis';
 import dotenv from 'dotenv';
 
@@ -42,19 +42,14 @@ async function initSessionStore(): Promise<session.Store> {
         console.log('Redis URL:', process.env.REDIS_URL.replace(/:.*@/, ':****@')); // Hide password
 
         try {
-            const redisClient = new (Redis as any)(process.env.REDIS_URL as string);
+            const redisClient = createClient({
+                url: process.env.REDIS_URL
+            });
 
-            redisClient.on('connect', () => console.log('Redis connected'));
             redisClient.on('error', (err: Error) => console.error('Redis error:', err.message));
 
-            // Wait for Redis client to be ready before creating store
-            await new Promise<void>((resolve) => {
-                if (redisClient.status === 'ready') {
-                    resolve();
-                } else {
-                    redisClient.once('ready', resolve);
-                }
-            });
+            await redisClient.connect();
+            console.log('Redis connected');
 
             return new RedisStore({ client: redisClient });
         } catch (err) {

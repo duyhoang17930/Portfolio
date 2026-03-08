@@ -546,6 +546,27 @@ server {
 }
 ```
 
+### 7.3 CI/CD Pipeline (GitHub Actions)
+
+The project uses GitHub Actions for continuous integration and deployment:
+
+| Workflow | File | Trigger |
+|----------|------|---------|
+| CI | `.github/workflows/ci.yml` | Push/PR to main |
+| Deploy Backend | `.github/workflows/deploy-be.yml` | Push to main, manual dispatch |
+
+**CI Workflow** (`ci.yml`):
+- Builds both Frontend (FE) and Backend (BE)
+- Runs on every push and pull request to `main`
+- Uses Node.js 20 with dependency caching
+
+**Deploy Workflow** (`deploy-be.yml`):
+- Deploys backend to VPS via SSH
+- Can be triggered automatically on push or manually via GitHub UI
+- Requires secrets: `VPS_HOST`, `VPS_USER`, `VPS_PORT`, `VPS_SSH_KEY`
+
+See `/home/ret/Portfolio/docs/deployment-guide.md` for complete setup instructions.
+
 ---
 
 ## 8. Frontend Visual Effects
@@ -647,5 +668,6 @@ app.get('/health', (req, res) => {
 
 ---
 
-*Document Version: 1.2*
+*Document Version: 1.3*
 *Last Updated: 2026-03-08*
+*Updated: Added CI/CD Pipeline section documenting GitHub Actions workflows*

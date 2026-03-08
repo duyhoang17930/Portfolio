@@ -426,6 +426,113 @@ sudo tail -f /var/log/nginx/error.log
 
 ---
 
+## CI/CD Automation (GitHub Actions)
+
+The project includes automated CI/CD workflows for continuous integration and deployment.
+
+### Workflow Files
+
+| Workflow | File | Trigger |
+|----------|------|---------|
+| CI | `.github/workflows/ci.yml` | Push/PR to main |
+| Deploy Backend | `.github/workflows/deploy-be.yml` | Push to main, manual dispatch |
+
+### CI Workflow (ci.yml)
+
+The CI workflow runs on every push and pull request to the `main` branch:
+
+1. **Triggers**: Push or PR to `main` branch
+2. **Jobs**:
+   - Builds both Frontend (FE) and Backend (BE)
+   - Uses Node.js 20 with dependency caching
+   - Runs `npm run build` for both projects
+
+```yaml
+# Runs on: push to main, pull_request to main
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+```
+
+### Deploy Backend Workflow (deploy-be.yml)
+
+The backend deployment workflow deploys to your VPS automatically:
+
+1. **Triggers**:
+   - Push to `main` branch
+   - Manual trigger via GitHub UI (`workflow_dispatch`)
+
+2. **Deployment Steps**:
+   - Checkout code (shallow clone)
+   - Setup Node.js 20
+   - Install dependencies and build
+   - SSH into VPS and:
+     - Pull latest code
+     - Install production dependencies
+     - Build the project
+     - Restart with PM2
+
+3. **Required Secrets**:
+   Configure these in GitHub repository settings (Settings -> Secrets and variables -> Actions):
+
+   | Secret | Description |
+   |--------|-------------|
+   | `VPS_HOST` | Your VPS IP address or hostname |
+   | `VPS_USER` | SSH username (e.g., `root`) |
+   | `VPS_PORT` | SSH port (default: `22`) |
+   | `VPS_SSH_KEY` | Private SSH key for authentication |
+
+### Setting Up Deployment
+
+1. **Generate SSH Key** (if not already done):
+   ```bash
+   ssh-keygen -t ed25519 -C "github-deploy"
+   ```
+
+2. **Add Public Key to VPS**:
+   ```bash
+   # Copy public key to server
+   ssh-copy-id -i ~/.ssh/id_ed25519.pub user@your-vps-ip
+   ```
+
+3. **Add Private Key as GitHub Secret**:
+   - Copy private key: `cat ~/.ssh/id_ed25519`
+   - Go to GitHub -> Repository -> Settings -> Secrets and variables -> Actions
+   - Add new secret: `VPS_SSH_KEY` with the private key content
+
+4. **Add VPS Details as Secrets**:
+   - `VPS_HOST`: Your server IP or domain
+   - `VPS_USER`: SSH username (typically `root`)
+   - `VPS_PORT`: SSH port (default `22`)
+
+5. **Ensure VPS Has Required Directory**:
+   ```bash
+   ssh user@your-vps-ip
+   mkdir -p /var/www/portfolio-be
+   cd /var/www/portfolio-be
+   git init
+   git remote add origin your-github-repo-url
+   ```
+
+### Manual Deployment
+
+To manually trigger a backend deployment:
+
+1. Go to GitHub repository -> Actions
+2. Select "Deploy Backend" workflow
+3. Click "Run workflow"
+4. Select branch and click "Run workflow"
+
+### Monitoring Deployments
+
+- **GitHub Actions**: Check workflow runs at `https://github.com/your-username/portfolio/actions`
+- **VPS Logs**: `pm2 logs portfolio-backend`
+- **Application**: Check your deployed application URL
+
+---
+
 ## Troubleshooting
 
 ### Common Issues
@@ -507,5 +614,6 @@ sudo tail -f /var/log/nginx/error.log
 
 ---
 
-*Document Version: 1.2*
+*Document Version: 1.3*
 *Last Updated: 2026-03-08*
+*Updated: Added CI/CD Automation section documenting GitHub Actions workflows*

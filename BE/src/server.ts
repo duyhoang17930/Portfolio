@@ -38,8 +38,24 @@ let sessionStore: session.Store;
 
 if (process.env.REDIS_URL) {
     console.log('Using Redis for session store');
-    const redisClient = new (Redis as any)(process.env.REDIS_URL);
-    sessionStore = new RedisStore({ client: redisClient });
+    console.log('Redis URL:', process.env.REDIS_URL.replace(/:.*@/, ':****@')); // Hide password
+
+    try {
+        const redisClient = new (Redis as any)(process.env.REDIS_URL);
+
+        redisClient.on('error', (err: Error) => console.error('Redis error:', err.message));
+        redisClient.on('connect', () => console.log('Redis connected'));
+
+        sessionStore = new RedisStore({ client: redisClient });
+    } catch (err) {
+        console.error('Failed to create Redis client:', err);
+        console.log('Falling back to MongoDB session store');
+        sessionStore = MongoStore.create({
+            mongoUrl: mongoUri,
+            collectionName: 'sessions',
+            ttl: 7 * 24 * 60 * 60
+        });
+    }
 } else {
     console.log('Using MongoDB for session store');
     sessionStore = MongoStore.create({

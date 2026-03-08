@@ -3,8 +3,6 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import type { Profile as GoogleProfile } from 'passport-google-oauth20';
 import { User } from '../models/index.js';
 import type { DoneCallback } from 'passport';
-import dotenv from "dotenv";
-dotenv.config();
 
 const clientId = process.env.GOOGLE_CLIENT_ID;
 const clientSecret = process.env.GOOGLE_CLIENT_SECRET;

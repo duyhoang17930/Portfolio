@@ -1,7 +1,7 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import { Project } from '../models/index.js';
 
-const router = Router();
+const router: RouterType = Router();
 
 // Get all projects (public)
 router.get('/', async (req, res) => {

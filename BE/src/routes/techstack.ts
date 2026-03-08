@@ -1,7 +1,7 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import { TechStackCategory } from '../models/index.js';
 
-const router = Router();
+const router: RouterType = Router();
 
 // Get all techstack categories (public)
 router.get('/', async (req, res) => {

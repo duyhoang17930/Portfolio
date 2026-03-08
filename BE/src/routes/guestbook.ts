@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import mongoose from 'mongoose';
 import { GuestbookMessage, User } from '../models/index.js';
 
-const router = Router();
+const router: RouterType = Router();
 
 // Get all messages
 router.get('/', async (req, res) => {

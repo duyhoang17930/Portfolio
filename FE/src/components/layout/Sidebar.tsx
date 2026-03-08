@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, FolderKanban, Mail, MessageSquare, Settings, Github, Linkedin, Sun, Moon, Code } from 'lucide-react';
+import { Home, User, FolderKanban, Mail, MessageSquare, Settings, Sun, Moon, Code } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -14,11 +14,6 @@ const navItems = [
 ];
 
 const adminNavItem = { path: '/admin', label: 'Admin', icon: Settings };
-
-const socialLinks = [
-  { href: 'https://github.com/duyhoang17930', label: 'GitHub', icon: Github },
-  { href: 'https://www.linkedin.com/in/nguyen-duy-hoang-18207b350', label: 'LinkedIn', icon: Linkedin },
-];
 
 export function Sidebar() {
   const location = useLocation();
@@ -91,27 +86,6 @@ export function Sidebar() {
             <Moon className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" strokeWidth={1.5} />
           )}
         </button>
-
-        {/* Social Icons */}
-        {socialLinks.map((social) => {
-          const Icon = social.icon;
-
-          return (
-            <a
-              key={social.label}
-              href={social.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-3 text-muted-foreground hover:text-foreground transition-all duration-300 group"
-              aria-label={social.label}
-            >
-              <Icon
-                className="w-5 h-5 transition-transform duration-300 group-hover:scale-110"
-                strokeWidth={1.5}
-              />
-            </a>
-          );
-        })}
       </div>
     </nav>
   );

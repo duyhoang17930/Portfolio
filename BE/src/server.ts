@@ -2,16 +2,18 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
+import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
 // Load strategies (registers them with passport)
 import './strategies/google.js';
 import './strategies/github.js';
 
-import { sequelize } from './models/index.js';
 import authRoutes from './routes/auth.js';
 import guestbookRoutes from './routes/guestbook.js';
 import projectsRoutes from './routes/projects.js';
+import techstackRoutes from './routes/techstack.js';
+import contactRoutes from './routes/contact.js';
 
 dotenv.config();
 
@@ -41,17 +43,24 @@ app.use(passport.session());
 app.use('/auth', authRoutes);
 app.use('/api/guestbook', guestbookRoutes);
 app.use('/api/projects', projectsRoutes);
+app.use('/api/techstack', techstackRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health check
 app.get('/', (req, res) => {
     res.json({ message: 'Backend running' });
 });
 
-// Sync database and start server
-sequelize.sync().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+// Connect to MongoDB and start server
+const mongoUri = process.env.DB_URI || 'mongodb://localhost:27017/portfolio';
+
+mongoose.connect(mongoUri)
+    .then(() => {
+        console.log('Connected to MongoDB');
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error('Failed to connect to MongoDB:', err);
     });
-}).catch((err) => {
-    console.error('Failed to sync database:', err);
-});

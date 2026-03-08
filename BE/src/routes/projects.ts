@@ -1,17 +1,12 @@
 import { Router } from 'express';
-import type { Request } from 'express';
 import { Project } from '../models/index.js';
-import type { AuthUser } from '../models/index.js';
-import { requireAdmin } from '../middleware/admin.js';
 
 const router = Router();
-
-type AuthRequest = Request & { user?: AuthUser };
 
 // Get all projects (public)
 router.get('/', async (req, res) => {
   try {
-    const projects = await Project.findAll({ order: [['displayOrder', 'ASC'], ['createdAt', 'DESC']] });
+    const projects = await Project.find().sort({ displayOrder: 1, createdAt: -1 });
     res.json(projects);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch projects' });
@@ -19,7 +14,10 @@ router.get('/', async (req, res) => {
 });
 
 // Create project (admin only)
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', async (req, res) => {
+  if (!req.isAuthenticated() || !req.user || !(req.user as any).isAdmin) {
+    return res.status(401).json({ error: 'Unauthorized - Admin access required' });
+  }
   try {
     const { title, description, techStack, imageUrl, demoUrl, repoUrl, featured, displayOrder } = req.body;
     const project = await Project.create({
@@ -32,19 +30,18 @@ router.post('/', requireAdmin, async (req, res) => {
 });
 
 // Update project (admin only)
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', async (req, res) => {
+  if (!req.isAuthenticated() || !req.user || !(req.user as any).isAdmin) {
+    return res.status(401).json({ error: 'Unauthorized - Admin access required' });
+  }
   try {
-    const paramId = req.params.id;
-    const idString = Array.isArray(paramId) ? paramId[0] : (paramId ?? '');
-    const projectId = Number(idString);
-    if (isNaN(projectId)) {
-      return res.status(400).json({ error: 'Invalid project ID' });
-    }
-    const project = await Project.findByPk(projectId);
+    const projectId = req.params.id;
+    const project = await Project.findById(projectId);
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
     const { title, description, techStack, imageUrl, demoUrl, repoUrl, featured, displayOrder } = req.body;
-    await project.update({ title, description, techStack, imageUrl, demoUrl, repoUrl, featured, displayOrder });
+    Object.assign(project, { title, description, techStack, imageUrl, demoUrl, repoUrl, featured, displayOrder });
+    await project.save();
     res.json(project);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update project' });
@@ -52,18 +49,16 @@ router.put('/:id', requireAdmin, async (req, res) => {
 });
 
 // Delete project (admin only)
-router.delete('/:id', requireAdmin, async (req, res) => {
+router.delete('/:id', async (req, res) => {
+  if (!req.isAuthenticated() || !req.user || !(req.user as any).isAdmin) {
+    return res.status(401).json({ error: 'Unauthorized - Admin access required' });
+  }
   try {
-    const paramId = req.params.id;
-    const idString = Array.isArray(paramId) ? paramId[0] : (paramId ?? '');
-    const projectId = Number(idString);
-    if (isNaN(projectId)) {
-      return res.status(400).json({ error: 'Invalid project ID' });
-    }
-    const project = await Project.findByPk(projectId);
+    const projectId = req.params.id;
+    const project = await Project.findById(projectId);
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
-    await project.destroy();
+    await project.deleteOne();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete project' });

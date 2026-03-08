@@ -1,5 +1,5 @@
 export interface User {
-  id: number;
+  _id: string;
   provider: string;
   name: string;
   email?: string;
@@ -9,13 +9,19 @@ export interface User {
 }
 
 export interface GuestbookMessage {
-  id: number;
-  userId: number;
-  message: string;
-  createdAt: string;
-  user: {
-    id: number;
+  _id: string;
+  userId: string | {
+    _id: string;
     name: string;
     avatarUrl?: string;
   };
+  message: string;
+  createdAt: string;
+}
+
+export interface TechStackCategory {
+  _id: string;
+  name: string;
+  items: string[];
+  displayOrder: number;
 }

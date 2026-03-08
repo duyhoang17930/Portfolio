@@ -79,7 +79,7 @@ export function Guestbook() {
           </h2>
           <MessageList
             messages={messages}
-            currentUserId={user?.id}
+            currentUserId={user?._id}
             onDelete={deleteMessage}
           />
         </div>

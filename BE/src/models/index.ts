@@ -1,64 +1,106 @@
-import { Sequelize, DataTypes } from 'sequelize';
-import dotenv from 'dotenv';
+import mongoose, { Schema, Document } from 'mongoose';
 
-dotenv.config();
-
-const sequelize = new Sequelize(
-  process.env.DB_NAME || 'portfolio',
-  process.env.DB_USER || 'root',
-  process.env.DB_PASSWORD || '',
-  {
-    host: process.env.DB_HOST || 'localhost',
-    dialect: 'mysql',
-    logging: false
-  }
-);
-
-// User Model
-const User = sequelize.define('User', {
-  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  provider: { type: DataTypes.STRING(20), allowNull: false },
-  providerId: { type: DataTypes.STRING(255), allowNull: false, unique: true },
-  name: { type: DataTypes.STRING(255), allowNull: false },
-  email: { type: DataTypes.STRING(255) },
-  avatarUrl: { type: DataTypes.TEXT },
-  isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false }
-}, { tableName: 'users', timestamps: true });
-
-// Project Model
-const Project = sequelize.define('Project', {
-  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  title: { type: DataTypes.STRING(255), allowNull: false },
-  description: { type: DataTypes.TEXT },
-  techStack: { type: DataTypes.JSON },
-  imageUrl: { type: DataTypes.TEXT },
-  demoUrl: { type: DataTypes.STRING(255) },
-  repoUrl: { type: DataTypes.STRING(255) },
-  featured: { type: DataTypes.BOOLEAN, defaultValue: false },
-  displayOrder: { type: DataTypes.INTEGER, defaultValue: 0 }
-}, { tableName: 'projects', timestamps: true });
-
-// GuestbookMessage Model
-const GuestbookMessage = sequelize.define('GuestbookMessage', {
-  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  userId: { type: DataTypes.INTEGER, allowNull: false },
-  message: { type: DataTypes.TEXT, allowNull: false }
-}, { tableName: 'guestbook_messages', timestamps: true });
-
-// Associations
-User.hasMany(GuestbookMessage, { foreignKey: 'userId', as: 'messages' });
-GuestbookMessage.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-
-// Types for authenticated users
-export interface AuthUser {
-  id: number;
+// User Document interface
+export interface IUser extends Document {
+  _id: mongoose.Types.ObjectId;
   provider: string;
   providerId: string;
   name: string;
-  email: string | null;
-  avatarUrl: string | null;
+  email?: string;
+  avatarUrl?: string;
   isAdmin: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export { sequelize, User, Project, GuestbookMessage };
-export type { AuthUser };
+// Project Document interface
+export interface IProject extends Document {
+  _id: mongoose.Types.ObjectId;
+  title: string;
+  description?: string;
+  techStack?: string[];
+  imageUrl?: string;
+  demoUrl?: string;
+  repoUrl?: string;
+  featured: boolean;
+  displayOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// GuestbookMessage Document interface
+export interface IGuestbookMessage extends Document {
+  _id: mongoose.Types.ObjectId;
+  userId: mongoose.Types.ObjectId;
+  message: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// TechStackCategory Document interface
+export interface ITechStackCategory extends Document {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  items: string[];
+  displayOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// User Schema
+const userSchema = new Schema<IUser>({
+  provider: { type: String, required: true },
+  providerId: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  email: { type: String },
+  avatarUrl: { type: String },
+  isAdmin: { type: Boolean, default: false }
+}, { timestamps: true });
+
+// Project Schema
+const projectSchema = new Schema<IProject>({
+  title: { type: String, required: true },
+  description: { type: String, default: '' },
+  techStack: { type: [String], default: [] },
+  imageUrl: { type: String, default: '' },
+  demoUrl: { type: String, default: '' },
+  repoUrl: { type: String, default: '' },
+  featured: { type: Boolean, default: false },
+  displayOrder: { type: Number, default: 0 }
+}, { timestamps: true });
+
+// GuestbookMessage Schema
+const guestbookMessageSchema = new Schema<IGuestbookMessage>({
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  message: { type: String, required: true }
+}, { timestamps: true });
+
+// TechStackCategory Schema
+const techStackCategorySchema = new Schema<ITechStackCategory>({
+  name: { type: String, required: true },
+  items: { type: [String], default: [] },
+  displayOrder: { type: Number, default: 0 }
+}, { timestamps: true });
+
+// Create indexes
+userSchema.index({ provider: 1, providerId: 1 });
+projectSchema.index({ displayOrder: 1, createdAt: -1 });
+guestbookMessageSchema.index({ createdAt: -1 });
+
+// Export models
+export const User = mongoose.model<IUser>('User', userSchema);
+export const Project = mongoose.model<IProject>('Project', projectSchema);
+export const GuestbookMessage = mongoose.model<IGuestbookMessage>('GuestbookMessage', guestbookMessageSchema);
+export const TechStackCategory = mongoose.model<ITechStackCategory>('TechStackCategory', techStackCategorySchema);
+
+// AuthUser type for req.user (compatible with existing code)
+export interface AuthUser {
+  id: string;
+  _id: mongoose.Types.ObjectId;
+  provider: string;
+  providerId: string;
+  name: string;
+  email?: string | null;
+  avatarUrl?: string | null;
+  isAdmin: boolean;
+}

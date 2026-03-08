@@ -1,7 +1,7 @@
 export function About() {
   const highlights = [
     { year: '9/2025 - Now', title: 'Intern Mobile Developer', description: 'Building mobile applications' },
-    { year: '1/2026 - Now', title: 'Intern Web Developer', description: 'Building web automation, tools, scapers' },
+    // { year: '1/2026 - Now', title: 'Intern Web Developer', description: 'Building web automation, tools, scapers' },
   ];
 
   return (

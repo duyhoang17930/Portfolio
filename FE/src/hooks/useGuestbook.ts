@@ -27,9 +27,9 @@ export function useGuestbook() {
     return data;
   };
 
-  const deleteMessage = async (id: number) => {
+  const deleteMessage = async (id: string) => {
     await api.delete(`/api/guestbook/${id}`);
-    setMessages((prev) => prev.filter((m) => m.id !== id));
+    setMessages((prev) => prev.filter((m) => m._id !== id));
   };
 
   return { messages, loading, addMessage, deleteMessage, refetch: fetchMessages };

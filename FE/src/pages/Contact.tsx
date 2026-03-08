@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Send, Mail, MapPin, Phone } from 'lucide-react';
+import api from '../lib/api';
 
 export function Contact() {
   const [formData, setFormData] = useState({
@@ -8,15 +9,23 @@ export function Contact() {
     message: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
-      alert('Message sent! (Demo)');
+    setStatus('idle');
+
+    try {
+      await api.post('/api/contact', formData);
+      setStatus('success');
       setFormData({ name: '', email: '', message: '' });
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setStatus('error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const contactInfo = [
@@ -127,6 +136,13 @@ export function Contact() {
                   </>
                 )}
               </button>
+
+              {status === 'success' && (
+                <p className="text-green-500 text-center text-sm">Message sent successfully!</p>
+              )}
+              {status === 'error' && (
+                <p className="text-red-500 text-center text-sm">Failed to send message. Please try again.</p>
+              )}
             </form>
           </div>
         </div>

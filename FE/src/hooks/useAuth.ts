@@ -26,7 +26,11 @@ export function useAuth() {
   };
 
   const logout = async () => {
-    await api.get('/auth/logout');
+    try {
+      await api.get('/auth/logout');
+    } catch {
+      // Ignore errors, proceed with logout anyway
+    }
     setUser(null);
     window.location.reload();
   };

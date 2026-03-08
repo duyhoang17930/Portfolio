@@ -3,6 +3,7 @@ import cors from 'cors';
 import session from 'express-session';
 import passport from 'passport';
 import mongoose from 'mongoose';
+import MongoStore from 'connect-mongo';
 import dotenv from 'dotenv';
 
 // Load strategies (registers them with passport)
@@ -27,12 +28,25 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Session
+// Session with MongoDB store
+const mongoUri = process.env.MONGO_URI || process.env.DB_URI || 'mongodb://localhost:27017/portfolio';
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production' }
+    store: MongoStore.create({
+        mongoUrl: mongoUri,
+        collectionName: 'sessions',
+        ttl: 7 * 24 * 60 * 60 // 7 days
+    }),
+    cookie: {
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        httpOnly: true,
+        path: '/'
+    }
 }));
 
 // Passport
@@ -52,8 +66,6 @@ app.get('/', (req, res) => {
 });
 
 // Connect to MongoDB and start server
-const mongoUri = process.env.DB_URI || 'mongodb://localhost:27017/portfolio';
-
 mongoose.connect(mongoUri)
     .then(() => {
         console.log('Connected to MongoDB');

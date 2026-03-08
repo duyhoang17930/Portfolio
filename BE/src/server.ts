@@ -42,14 +42,10 @@ async function initSessionStore(): Promise<session.Store> {
         console.log('Redis URL:', process.env.REDIS_URL.replace(/:.*@/, ':****@')); // Hide password
 
         try {
-            // Use TLS only if URL uses rediss:// scheme
-            const redisUrl = process.env.REDIS_URL || '';
-            const useTls = redisUrl.startsWith('rediss://');
-            const redisOptions = useTls ? { tls: {} } : {};
-            const redisClient = new (Redis as any)(redisUrl, redisOptions);
+            const redisClient = new (Redis as any)(process.env.REDIS_URL as string);
 
-            redisClient.on('error', (err: Error) => console.error('Redis error:', err.message));
             redisClient.on('connect', () => console.log('Redis connected'));
+            redisClient.on('error', (err: Error) => console.error('Redis error:', err.message));
 
             // Wait for Redis client to be ready before creating store
             await new Promise<void>((resolve) => {
@@ -90,8 +86,8 @@ initSessionStore().then((sessionStore) => {
         saveUninitialized: false,
         cookie: {
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            secure: true,
-            sameSite: 'none',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             httpOnly: true,
             path: '/'
         }

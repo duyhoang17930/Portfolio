@@ -15,21 +15,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: BE/package-lock.json
-
-      - name: Install dependencies
-        working-directory: BE
-        run: npm ci
-
-      - name: Build
-        working-directory: BE
-        run: npm run build
-
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -38,9 +23,12 @@ jobs:
           port: ${{ secrets.VPS_PORT || '22' }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /var/www/portfolio-be
-            git fetch origin main
-            git reset --hard FETCH_HEAD
-            npm ci --production
+            cd ~/Portfolio
+            git pull origin main
+
+            cd BE
             npm run build
-            pm2 restart portfolio-be || pm2 start npm --name "portfolio-be" -- run start
+
+            docker-compose down
+            docker-compose build backend
+            docker-compose up -d --build

@@ -227,11 +227,11 @@ SESSION_SECRET=your-super-secret-session-key-here
 # OAuth (from Google Cloud Console & GitHub Developer Settings)
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_CALLBACK_URL=https://your-domain.com/api/auth/google/callback
+GOOGLE_CALLBACK_URL=https://your-domain.com/auth/google/callback
 
 GITHUB_CLIENT_ID=your-github-client-id
 GITHUB_CLIENT_SECRET=your-github-client-secret
-GITHUB_CALLBACK_URL=https://your-domain.com/api/auth/github/callback
+GITHUB_CALLBACK_URL=https://your-domain.com/auth/github/callback
 
 # Email
 GMAIL_USER=your-email@gmail.com
@@ -404,7 +404,7 @@ After getting your domain, update OAuth callback URLs:
 3. Edit your OAuth client
 4. Add to **Authorized redirect URIs**:
    ```
-   https://your-domain.com/api/auth/google/callback
+   https://your-domain.com/auth/google/callback
    ```
 
 ### GitHub OAuth
@@ -412,7 +412,7 @@ After getting your domain, update OAuth callback URLs:
 2. Edit your OAuth App
 3. Update **Authorization callback URL**:
    ```
-   https://your-domain.com/api/auth/github/callback
+   https://your-domain.com/auth/github/callback
    ```
 
 ---

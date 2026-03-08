@@ -8,6 +8,8 @@ import Redis from 'ioredis';
 import { RedisStore } from 'connect-redis';
 import dotenv from 'dotenv';
 
+dotenv.config();
+
 // Load strategies (registers them with passport)
 import './strategies/google.js';
 import './strategies/github.js';
@@ -17,8 +19,6 @@ import guestbookRoutes from './routes/guestbook.js';
 import projectsRoutes from './routes/projects.js';
 import techstackRoutes from './routes/techstack.js';
 import contactRoutes from './routes/contact.js';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

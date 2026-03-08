@@ -12,7 +12,7 @@ services:
     environment: 
       - NODE_ENV=production 
       - PORT=3000 
-      - MONGO_URI=${MONGO_URI} 
+      - DB_URI=${DB_URI} 
       - SESSION_SECRET=${SESSION_SECRET} 
       - FE_URL=${FE_URL} 
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} 

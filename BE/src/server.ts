@@ -1,3 +1,4 @@
+dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import session, { MemoryStore } from 'express-session';
@@ -8,7 +9,6 @@ import { createClient } from 'redis';
 import { RedisStore } from 'connect-redis';
 import dotenv from 'dotenv';
 
-dotenv.config();
 
 // Load strategies (registers them with passport)
 import './strategies/google.js';

@@ -4,9 +4,6 @@ import { Home } from './pages/Home';
 import { About } from './pages/About';
 import { TechStack } from './pages/TechStack';
 import { Projects } from './pages/Projects';
-import { Contact } from './pages/Contact';
-import { Guestbook } from './pages/Guestbook';
-import { Admin } from './pages/Admin';
 
 function App() {
   return (
@@ -16,9 +13,6 @@ function App() {
         <Route path="about" element={<About />} />
         <Route path="techstack" element={<TechStack />} />
         <Route path="projects" element={<Projects />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="guestbook" element={<Guestbook />} />
-        <Route path="admin" element={<Admin />} />
       </Route>
     </Routes>
   );

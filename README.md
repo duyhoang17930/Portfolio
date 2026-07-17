@@ -1,292 +1,162 @@
-# Portfolio - Fullstack Portfolio with OAuth Guestbook
+# Portfolio
 
-A personal portfolio website featuring 7 tabs (Home, About, TechStack, Projects, Contact, Guestbook, Admin) with OAuth authentication via Google and GitHub. Includes an admin dashboard for managing portfolio projects and tech stack.
+This repository contains **two versions** of the portfolio project.
 
-## Features
+## Available variants
 
-- **7 Tab Portfolio**: Home, About, TechStack, Projects, Contact, Guestbook, Admin
-- **OAuth Authentication**: Sign in with Google or GitHub
-- **Guestbook**: Visitors can leave messages after signing in
-- **Admin Dashboard**: Manage projects and tech stack (CRUD operations)
-- **Contact Form**: Send email via Nodemailer
-- **Modern Stack**: React 19, Express 5, TypeScript, Tailwind CSS 4
+| Variant | Branch | Description |
+| --- | --- | --- |
+| Frontend-only | `main` | Static portfolio built with React + Vite. No backend, database, auth, or API runtime dependency. |
+| Fullstack with backend | `feat/portfolio-with-backend` | Portfolio with Express, MongoDB, OAuth, contact form, guestbook, and admin dashboard. |
 
-## Tech Stack
+## Feature comparison
 
-### Frontend
-- React 19.2.0
-- TypeScript 5.9
-- Vite 7.3.1
-- Tailwind CSS 4.2.1
-- React Router DOM 7.13.1
-- Axios 1.13.6
-- @react-spring/web 10.0.3
+| Feature | Frontend-only (`main`) | Fullstack (`feat/portfolio-with-backend`) |
+| --- | --- | --- |
+| Home / About | Yes | Yes |
+| Tech Stack | Yes | Yes |
+| Projects | Yes | Yes |
+| Contact page | No | Yes |
+| Guestbook | No | Yes |
+| Admin dashboard | No | Yes |
+| OAuth login | No | Yes |
+| Backend API required | No | Yes |
+| MongoDB required | No | Yes |
 
-### Backend
-- Express 5.2.1
-- TypeScript 5.9.3
-- Passport.js 0.7.0 (Google & GitHub OAuth)
-- Mongoose 9.2.4
-- MongoDB
-- express-session 1.19.0
-- Nodemailer 8.0.1
-- Redis support for session store
+## Tech stack
 
-## Prerequisites
+### Frontend-only version
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
 
-- Node.js 20+
-- MongoDB (local or Atlas)
-- Google OAuth credentials (Google Cloud Console)
-- GitHub OAuth credentials (GitHub Developer Settings)
+### Fullstack version
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- Express
+- MongoDB + Mongoose
+- Passport.js (Google & GitHub OAuth)
+- Nodemailer
+- express-session
 
-## Getting Started
+## Quick start
 
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
 git clone <repository-url>
 cd Portfolio
 ```
 
-### 2. Setup Backend
+## Run the frontend-only version
 
-```bash
-cd BE
-
-# Install dependencies
-npm install
-
-# Create environment file
-cp .env.example .env
-# Edit .env with your credentials
-
-# Start development server
-npm run dev
-```
-
-The backend runs on `http://localhost:3000` by default.
-
-### 3. Setup Frontend
+This is the default `main` branch.
 
 ```bash
 cd FE
-
-# Install dependencies
 npm install
-
-# Create environment file
-cp .env.example .env
-# Edit .env with API URL (default: http://localhost:3000)
-
-# Start development server
 npm run dev
 ```
 
-The frontend runs on `http://localhost:5173` by default.
+- Frontend runs on `http://localhost:5173`
+- No backend setup is required
+- No `VITE_API_URL` is required
 
-## Environment Variables
+## Run the fullstack version
 
-### Backend (BE/.env)
+Switch to the backend-enabled branch first:
+
+```bash
+git checkout feat/portfolio-with-backend
+```
+
+### Backend
+
+```bash
+cd BE
+npm install
+cp .env.example .env
+npm run dev
+```
+
+### Frontend
+
+```bash
+cd FE
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Fullstack requirements:
+- Node.js 20+
+- MongoDB
+- Google OAuth credentials
+- GitHub OAuth credentials
+- Email credentials for contact form
+
+Default local URLs:
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3000`
+
+## Environment variables for the fullstack branch
+
+### Backend (`BE/.env`)
 
 ```env
-# Server
 PORT=3000
 NODE_ENV=development
 FE_URL=http://localhost:5173
-
-# Database
 MONGO_URI=mongodb://localhost:27017/portfolio
-
-# Session
 SESSION_SECRET=your-session-secret-min-32-chars
-
-# Google OAuth
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
-
-# GitHub OAuth
 GITHUB_CLIENT_ID=your-github-client-id
 GITHUB_CLIENT_SECRET=your-github-client-secret
 GITHUB_CALLBACK_URL=http://localhost:3000/auth/github/callback
-
-# Email (Nodemailer)
 GMAIL_USER=your-email@gmail.com
 GMAIL_APP_PASSWORD=your-app-password
 CONTACT_TO_EMAIL=your-email@gmail.com
 ```
 
-### Frontend (FE/.env)
+### Frontend (`FE/.env`)
 
 ```env
 VITE_API_URL=http://localhost:3000
 ```
 
-## Getting OAuth Credentials
+## Deployment
 
-### Google OAuth
+### Frontend-only (`main`)
+- Deploy the `FE` app directly to Vercel, Netlify, or any static host
+- No backend service is required
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project
-3. Navigate to APIs & Services > Credentials
-4. Create OAuth 2.0 Client ID credentials
-5. Set authorized redirect URIs to `http://localhost:3000/auth/google/callback`
-6. Copy Client ID and Client Secret to .env
+### Fullstack (`feat/portfolio-with-backend`)
+- Deploy frontend and backend separately
+- Provision MongoDB
+- Configure OAuth callback URLs
+- Configure environment variables for both apps
 
-### GitHub OAuth
+## Project structure
 
-1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
-2. Create a new OAuth App
-3. Set authorization callback URL to `http://localhost:3000/auth/github/callback`
-4. Copy Client ID and Client Secret to .env
-
-## Database Setup
-
-MongoDB collections are created automatically by Mongoose when the server starts.
-
-Collections created:
-- `users` - User accounts (OAuth data)
-- `projects` - Portfolio projects
-- `guestbookmessages` - Guestbook entries
-- `techstackcategories` - Tech stack categories
-
-## Making a User Admin
-
-After logging in with OAuth, use MongoDB Compass or CLI to update:
-
-```javascript
-db.users.updateOne({ email: "your-email@example.com" }, { $set: { isAdmin: true } })
-```
-
-Or use the seed script:
-```bash
-npm run seed:admin
-```
-
-## API Endpoints
-
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /auth/google | Google OAuth |
-| GET | /auth/github | GitHub OAuth |
-| GET | /auth/me | Get current user |
-| GET | /auth/logout | Logout |
-
-### Guestbook
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/guestbook | Get all messages |
-| POST | /api/guestbook | Create message (auth) |
-| DELETE | /api/guestbook/:id | Delete message (auth) |
-
-### Projects
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/projects | Get all projects |
-| POST | /api/projects | Create project (admin) |
-| PUT | /api/projects/:id | Update project (admin) |
-| DELETE | /api/projects/:id | Delete project (admin) |
-
-### TechStack
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/techstack | Get all categories |
-| POST | /api/techstack | Create category (admin) |
-| PUT | /api/techstack/:id | Update category (admin) |
-| DELETE | /api/techstack/:id | Delete category (admin) |
-
-### Contact
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/contact | Send contact email |
-
-## Scripts
-
-### Frontend (FE)
-
-```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run lint     # Run ESLint
-npm run preview  # Preview production build
-```
-
-### Backend (BE)
-
-```bash
-npm run dev         # Start development server (watch mode)
-npm run build       # Compile TypeScript
-npm start           # Start production server
-npm run seed:admin  # Create admin user
-npm run seed:projects # Seed sample projects
-npm run seed:techstack # Seed tech stack categories
-```
-
-## Project Structure
-
-```
+```text
 Portfolio/
-├── FE/                     # Frontend
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   │   ├── layout/   # Layout, Sidebar
-│   │   │   ├── guestbook/ # LoginPrompt, MessageForm, MessageList
-│   │   │   ├── CursorFollower.tsx
-│   │   │   └── TextTransition.tsx
-│   │   ├── pages/        # Page components
-│   │   ├── contexts/     # ThemeContext, CursorFollowerContext
-│   │   ├── hooks/       # useAuth, useGuestbook
-│   │   ├── lib/         # api.ts, utils.ts
-│   │   ├── types/       # TypeScript types
-│   │   └── App.tsx
-│   ├── public/          # Static assets
-│   └── package.json
-│
-├── BE/                     # Backend
-│   ├── src/
-│   │   ├── middleware/    # Admin middleware
-│   │   ├── models/        # Mongoose models
-│   │   ├── routes/       # API routes
-│   │   ├── strategies/   # OAuth strategies
-│   │   ├── scripts/      # Seed scripts
-│   │   └── server.ts
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   └── package.json
-│
-├── docs/                   # Documentation
-│   ├── project-overview-pdr.md
-│   ├── codebase-summary.md
-│   ├── code-standards.md
-│   ├── system-architecture.md
-│   └── deployment-guide.md
-│
+├── FE/        # React frontend
+├── BE/        # Express backend (used in fullstack branch)
+├── docs/      # Project documentation
 └── README.md
 ```
 
-## Deployment
+## Notes
 
-### Development
-- Frontend: http://localhost:5173
-- Backend: http://localhost:3000
-
-### Production
-
-See [Deployment Guide](./docs/deployment-guide.md) for step-by-step instructions:
-- Frontend: Deploy to Vercel
-- Backend: Deploy to VPS with Docker/PM2
-- Database: MongoDB on Atlas or self-hosted
-- Session Store: Redis (optional) or MongoDB
-- SSL: Nginx with Let's Encrypt
-
-## Documentation
-
-- [Deployment Guide](./docs/deployment-guide.md) - Step-by-step production deployment
-- [Project Overview & PDR](./docs/project-overview-pdr.md)
-- [Codebase Summary](./docs/codebase-summary.md)
-- [Code Standards](./docs/code-standards.md)
-- [System Architecture](./docs/system-architecture.md)
+- Use `main` if you want the simplest static portfolio deployment.
+- Use `feat/portfolio-with-backend` if you want guestbook, contact form, admin, and OAuth features.
 
 ## License
 

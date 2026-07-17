@@ -1,29 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, User, FolderKanban, Mail, MessageSquare, Settings, Sun, Moon, Code } from 'lucide-react';
+import { Home, User, FolderKanban, Sun, Moon, Code } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useAuth } from '../../hooks/useAuth';
 
 const navItems = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/about', label: 'About', icon: User },
   { path: '/techstack', label: 'TechStack', icon: Code },
   { path: '/projects', label: 'Projects', icon: FolderKanban },
-  { path: '/contact', label: 'Contact', icon: Mail },
-  { path: '/guestbook', label: 'Guestbook', icon: MessageSquare },
 ];
-
-const adminNavItem = { path: '/admin', label: 'Admin', icon: Settings };
 
 export function Sidebar() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { user } = useAuth();
-
-  // Filter nav items - add admin only if user is admin
-  const filteredNavItems = user?.isAdmin
-    ? [...navItems, adminNavItem]
-    : navItems;
 
   return (
     <nav className="fixed left-0 top-0 h-full w-20 flex flex-col items-center justify-between py-6 z-50">
@@ -34,7 +23,7 @@ export function Sidebar() {
 
       {/* Navigation Icons */}
       <div className="flex flex-col gap-6">
-        {filteredNavItems.map((item) => {
+        {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           const Icon = item.icon;
 

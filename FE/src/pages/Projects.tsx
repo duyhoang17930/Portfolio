@@ -1,16 +1,5 @@
-import { useEffect, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import api from '../lib/api';
-
-interface Project {
-  _id: string;
-  title: string;
-  description?: string;
-  techStack?: string[];
-  demoUrl?: string;
-  repoUrl?: string;
-  color: string;
-}
+import { portfolioProjects } from '../data/portfolioData';
 
 const colorClasses = [
   'from-blue-500/20 to-purple-500/20',
@@ -19,36 +8,12 @@ const colorClasses = [
   'from-pink-500/20 to-rose-500/20',
 ];
 
+const projects = portfolioProjects.map((project, index) => ({
+  ...project,
+  color: colorClasses[index % colorClasses.length],
+}));
+
 export function Projects() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchProjects() {
-      try {
-        const { data } = await api.get('/api/projects');
-        // Add color to each project for frontend display
-        const projectsWithColor = data.map((p: any, i: number) => ({
-          ...p,
-          color: colorClasses[i % colorClasses.length],
-        }));
-        setProjects(projectsWithColor);
-      } catch (error) {
-        console.error('Failed to fetch projects:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProjects();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen py-12 px-4 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
   return (
     <div className="min-h-screen py-12 px-4">
       <div className="max-w-6xl mx-auto">
